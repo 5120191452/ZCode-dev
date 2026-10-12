@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "caseName": "longsys-provider-onboarding",
+  "spec": "./test/e2e/manual-review/pending/longsys-provider-onboarding.test.ts",
+  "providerRequestPolicy": "none",
+  "noProviderRequests": true,
+  "providerFixtures": [],
+  "fileFixtures": [],
+  "requests": []
+}

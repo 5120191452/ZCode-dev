@@ -33,7 +33,7 @@ export interface HighspeedEntranceSnapshot {
   phase: string | null;
 }
 
-// Bug 根因：Built-in Provider Config（revision 31）中 Team Coding Plan 与 BigModel 加速卡的
+// Bug 根因：Built-in Provider Config（revision 32）中 Team Coding Plan 与 BigModel 加速卡的
 // builtinModelIds 都只剩 GLM-5.3 / GLM-5.3-Flash，继续 seed GLM-5.2 会被判为目录外模型，
 // toolbar 回落到首个模型，waitForSelectedModel 在抽卡前就失败。改用两者目录共有的 GLM-5.3。
 const HIGHSPEED_E2E_MODEL = E2E_PLAN_FIRST_MODEL;

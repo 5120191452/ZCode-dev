@@ -27,6 +27,39 @@ Electron 用例不声称覆盖这些微观竞态。AUTH-06 保持 pending，Pro 
 - 如果不触发模型请求，manifest 必须显式声明 `providerRequestPolicy: "none"`。
 - 如果通过 WDIO seed 写入本地配置，文档必须写明 seed 文件和需要验证的清理边界。
 
+## AUTH-LONGSYS-01: 首页仅使用 Longsys API Key
+
+| 字段             | 内容                                                                                      |
+| ---------------- | ----------------------------------------------------------------------------------------- |
+| Spec             | `packages/desktop/test/e2e/manual-review/pending/longsys-provider-onboarding.test.ts`     |
+| Fixture manifest | `packages/desktop/test/e2e/fixtures/cases/auth-config/longsys-provider-onboarding.json`   |
+| Provider fixture | 冷启动显式不注入账号与 Provider；`providerRequestPolicy: "none"`；合成 Key 只填写、不提交 |
+| 当前状态         | 候选 case，等待人工确认 Longsys 首页视觉后转正                                            |
+
+场景从未登录、无可执行 Provider 的 desktop local 冷启动自动进入 WelcomeScreen，断言只展示密码型 API Key
+输入和主动作，不展示 Provider 选择、Base URL、OAuth、取消或跳过入口。填写固定测试 Key
+标记后主动作可用，但不点击提交，因此不访问真实 Longsys 服务、不写入凭据，也不冒充模型发现整链 E2E。
+固定 `/models` 请求、脱敏失败、原子 upsert 和 Registry 投影由服务／Provider 集成测试覆盖。
+
+| 编号              | 验证项                       | 有效性说明                                     |
+| ----------------- | ---------------------------- | ---------------------------------------------- |
+| AUTH-LONGSYS-01-A | 首页只有 Longsys Key 主路径  | 证明普通首页不再暴露 OAuth/provider/base URL   |
+| AUTH-LONGSYS-01-B | 输入使用 password 类型       | 证明 Key 不以明文字段展示                      |
+| AUTH-LONGSYS-01-C | 非空 Key 使主动作可用        | 证明本地非空门禁可交互，不通过提交触发真实网络 |
+| AUTH-LONGSYS-01-D | capture 中没有 Provider 请求 | manifest 声明 `providerRequestPolicy: "none"`  |
+
+### 自动运行结论
+
+2026-10-12 已执行：
+
+- `ZCODE_E2E_MANUAL_REVIEW=1 pnpm --filter @zcode/desktop test:e2e -- --spec ./test/e2e/manual-review/pending/longsys-provider-onboarding.test.ts`
+  - 结果：通过，1 个 spec / 1 个 case passed。
+  - Artifact：`packages/desktop/.e2e-artifacts/desktop-e2e-20261012081953250-p1268950-9de98adcc3482f42/summary.md`。
+  - Provider capture 的 `records` 为空，符合 `providerRequestPolicy: "none"`。
+  - 结论：未登录且无 Provider 的冷启动自动进入 Longsys 首页；页面只有密码型 Key 输入和主动作，合成 Key 非空后主动作可用。
+
+当前只完成自动运行，尚未记录人工视觉验收，因此继续保留在 `manual-review/pending`，不执行转正或 Docker 准入。
+
 ## AUTH-01: 损坏 OAuth 凭据冷启动恢复
 
 ### Case 定义

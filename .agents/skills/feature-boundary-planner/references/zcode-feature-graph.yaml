@@ -518,6 +518,23 @@ nodes:
       - "ProviderTemplate is a domain shell containing localized name metadata and a Provider Config Overlay; Model Config Rules remain centralized so their precedence stays explicit."
       - "Provider branding is declared once by Provider Config.logo; the UI logo resource table maps open built-in keys to packaged theme assets and unknown keys fall back without affecting executability."
 
+  - id: "capability.longsys-provider-onboarding"
+    kind: "capability"
+    label: "Longsys API-key-only provider onboarding"
+    aliases: ["Longsys AI", "Longsys 模型发现", "Longsys API Key"]
+    docs: ["docs/longsys-provider-onboarding.md"]
+    codeSeeds:
+      - symbol: "LoginApiKeyForm"
+        file: "packages/ui/src/login/LoginApiKeyForm.tsx"
+      - symbol: "configureLongsysProvider"
+        file: "packages/services/src/model-provider/providerFacadeServices.ts"
+      - symbol: "upsertDiscoveredPersonalProvider"
+        file: "packages/provider/src/config-service.ts"
+    invariants:
+      - "The ordinary welcome screen accepts only an API key; the Longsys base URL and OpenAI-compatible API type are fixed by the built-in template."
+      - "The Host discovers model ids before atomically persisting the API key and exact model membership; a failed or empty discovery leaves Personal Provider config unchanged."
+      - "Repeated setup reuses one template-owned Personal Provider and replaces its credential and discovered membership without duplicate providers."
+
   - id: "capability.plan-entitlements"
     kind: "capability"
     label: "Plan identity, entitlements, quota, and billing"
@@ -2592,6 +2609,16 @@ nodes:
       - symbol: "resolveProviderModelDraftCommit"
         file: "packages/ui/src/settings/model-provider-section/ProviderModelMetadata.ts"
 
+  - id: "surface.longsys-api-key-onboarding"
+    kind: "ui-surface"
+    label: "Welcome-screen Longsys API key form"
+    docs: ["docs/longsys-provider-onboarding.md"]
+    codeSeeds:
+      - symbol: "LoginPanel"
+        file: "packages/ui/src/WelcomeScreen.tsx"
+      - symbol: "LoginApiKeyForm"
+        file: "packages/ui/src/login/LoginApiKeyForm.tsx"
+
   - id: "capability.customize-capability-search"
     kind: "capability"
     label: "Scope-aware Plugin capability search"
@@ -3007,6 +3034,16 @@ nodes:
         file: "packages/services/src/model-provider/providerFacadeServices.ts"
       - symbol: "useProviderSettingsServiceView"
         file: "packages/ui/src/hooks/useProviderSettingsView.ts"
+
+  - id: "service.longsys-model-discovery"
+    kind: "service"
+    label: "Host-owned Longsys OpenAI-compatible model discovery"
+    docs: ["docs/longsys-provider-onboarding.md"]
+    codeSeeds:
+      - symbol: "discoverLongsysModelIds"
+        file: "packages/services/src/model-provider/longsysModelDiscovery.ts"
+      - symbol: "createLongsysProviderProvisioner"
+        file: "packages/services/src/model-provider/providerRuntime.ts"
 
   - id: "persistence.model-provider-config"
     kind: "persistence"
@@ -6634,6 +6671,29 @@ edges:
     to: "service.provider-settings"
     type: "commits-to"
     rank: "must-inspect"
+  - from: "capability.longsys-provider-onboarding"
+    to: "surface.longsys-api-key-onboarding"
+    type: "renders-in"
+    rank: "must-inspect"
+  - from: "surface.longsys-api-key-onboarding"
+    to: "service.longsys-model-discovery"
+    type: "requests-fixed-endpoint-discovery-through"
+    rank: "must-inspect"
+    condition: "Renderer submits only the API key; Host fixes https://aicode.longsys.com/v1/models and never accepts Renderer-supplied model ids or base URLs."
+  - from: "service.longsys-model-discovery"
+    to: "service.provider-settings"
+    type: "commits-discovered-membership-through"
+    rank: "must-inspect"
+    condition: "A non-empty successful discovery serially upserts one template-owned Personal Provider and refreshes Registry; failures do not write config."
+  - from: "service.provider-settings"
+    to: "persistence.model-provider-config"
+    type: "atomically-persists-longsys-key-and-membership-to"
+    rank: "must-inspect"
+  - from: "capability.longsys-provider-onboarding"
+    to: "boundary.web-remote-replayable"
+    type: "must-remain-isolated-from"
+    rank: "invariant-only"
+    condition: "Mobile and remote Renderer attachments reuse the owning Workspace Host service; they do not create another model-discovery runtime or persist credentials locally."
   - from: "surface.provider-settings"
     to: "capability.provider-registry"
     type: "configures-explicit-model-input-format-for"

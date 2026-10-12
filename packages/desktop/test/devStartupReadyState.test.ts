@@ -1,12 +1,16 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import semver from "semver";
 import { describe, expect, it } from "vitest";
 import tsupConfig from "../tsup.config";
 
 const desktopPackageJsonPath = resolve(import.meta.dirname, "../package.json");
 const devScriptPath = resolve(import.meta.dirname, "../scripts/dev.mjs");
 
-const desktopPackageJson = JSON.parse(readFileSync(desktopPackageJsonPath, "utf8")) as {
+const desktopPackageJson = JSON.parse(
+  readFileSync(desktopPackageJsonPath, "utf8"),
+) as {
+  version?: string;
   scripts: Record<string, string | undefined>;
 };
 const devScriptSource = readFileSync(devScriptPath, "utf8");
@@ -24,16 +28,41 @@ describe("desktop dev startup ready state", () => {
   });
 
   it("每个 tsup config 都应在自身成功后写入独立 ready 标记", () => {
-    expect(getConfig("main").onSuccess).toBe('node scripts/write-dev-ready-marker.mjs main');
-    expect(getConfig("host").onSuccess).toBe('node scripts/write-dev-ready-marker.mjs host');
-    expect(getConfig("preload").onSuccess).toBe('node scripts/write-dev-ready-marker.mjs preload');
+    expect(getConfig("main").onSuccess).toBe(
+      "node scripts/write-dev-ready-marker.mjs main",
+    );
+    expect(getConfig("host").onSuccess).toBe(
+      "node scripts/write-dev-ready-marker.mjs host",
+    );
+    expect(getConfig("preload").onSuccess).toBe(
+      "node scripts/write-dev-ready-marker.mjs preload",
+    );
   });
 
   it("启动 Electron 前应等待 main/host/preload 全部 ready 标记，而不是只看单个文件", () => {
     expect(devScriptSource).toContain("const buildReadyMarkers = [");
     expect(devScriptSource).toContain('resolve(root, "out/.main-build-ready")');
     expect(devScriptSource).toContain('resolve(root, "out/.host-build-ready")');
-    expect(devScriptSource).toContain('resolve(root, "out/.preload-build-ready")');
+    expect(devScriptSource).toContain(
+      'resolve(root, "out/.preload-build-ready")',
+    );
     expect(devScriptSource).not.toContain("while (!existsSync(mainBundle))");
+  });
+
+  it("未打包 Electron 的开发版本必须是合法 SemVer", () => {
+    expect(semver.valid(desktopPackageJson.version)).toBe("0.0.0");
+  });
+
+  it("启动 Electron 子进程时应移除 IDE 继承的 ELECTRON_RUN_AS_NODE", () => {
+    expect(devScriptSource).toContain(
+      "delete electronEnv.ELECTRON_RUN_AS_NODE",
+    );
+    expect(devScriptSource).toContain("env: electronEnv");
+  });
+
+  it("Linux 开发启动不得绕过 Chromium 沙箱", () => {
+    expect(devScriptSource).not.toContain("--disable-setuid-sandbox");
+    expect(devScriptSource).not.toContain("--no-sandbox");
+    expect(devScriptSource).toContain('spawn(electronCommand, ["."], {');
   });
 });

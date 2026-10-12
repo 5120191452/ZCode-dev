@@ -1,6 +1,6 @@
 import { mkdtemp, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import {
   ProviderConfigMap,
   extractManualModelConfig,
@@ -653,6 +653,111 @@ describe("ProviderRuntime", () => {
         executable: false,
       }),
     );
+    runtime.dispose();
+  });
+
+  it("Longsys Key 发现模型后幂等配置同一个 Registry Provider", async () => {
+    const root = await mkdtemp(join(tmpdir(), "zcode-provider-runtime-longsys-"));
+    const discoverLongsysModelIds = vi
+      .fn<() => Promise<readonly string[]>>()
+      .mockResolvedValueOnce(["GLM-5.3-Flash", "Default_coder"])
+      .mockResolvedValueOnce(["Web_model", "GLM-5.3"]);
+    const runtime = createProviderRuntime({
+      zcodeBuiltinFilePath: resolve(
+        import.meta.dirname,
+        "../../../config/provider/zcode-builtin.test.json",
+      ),
+      personalFilePath: join(root, "personal.json"),
+      watch: false,
+      discoverLongsysModelIds,
+    });
+
+    const first = await runtime.providerSettings.configureLongsysProvider({
+      apiKey: "test-key-a",
+    });
+    const second = await runtime.providerSettings.configureLongsysProvider({
+      apiKey: "test-key-b",
+    });
+
+    expect(first.providerId).toBe("longsys");
+    expect(second.providerId).toBe(first.providerId);
+    expect(discoverLongsysModelIds).toHaveBeenNthCalledWith(1, "test-key-a");
+    expect(discoverLongsysModelIds).toHaveBeenNthCalledWith(2, "test-key-b");
+    expect(
+      (await runtime.configService.read()).personalProviders.get("longsys")?.toJSON(),
+    ).toMatchObject({
+      access: { type: "api-key", apiKey: "test-key-b" },
+      personalModelIds: ["Web_model", "GLM-5.3"],
+      modelOrder: ["Web_model", "GLM-5.3"],
+    });
+    expect(
+      (await runtime.modelSelection.getView()).providers
+        .find((provider) => provider.providerId === "longsys")
+        ?.models.map((model) => model.modelId),
+    ).toEqual(["Web_model", "GLM-5.3"]);
+    runtime.dispose();
+  });
+
+  it("Longsys 模型发现失败时不写入 Personal Provider", async () => {
+    const root = await mkdtemp(join(tmpdir(), "zcode-provider-runtime-longsys-failure-"));
+    const runtime = createProviderRuntime({
+      zcodeBuiltinFilePath: resolve(
+        import.meta.dirname,
+        "../../../config/provider/zcode-builtin.test.json",
+      ),
+      personalFilePath: join(root, "personal.json"),
+      watch: false,
+      discoverLongsysModelIds: vi.fn(async () => {
+        throw new Error("discovery rejected");
+      }),
+    });
+
+    await expect(
+      runtime.providerSettings.configureLongsysProvider({ apiKey: "test-key" }),
+    ).rejects.toThrow("discovery rejected");
+    expect((await runtime.configService.read()).personalProviders.keys()).toEqual([]);
+    runtime.dispose();
+  });
+
+  it("并发 Longsys 配置按 Host 命令顺序串行提交", async () => {
+    const root = await mkdtemp(join(tmpdir(), "zcode-provider-runtime-longsys-queue-"));
+    let releaseFirst!: () => void;
+    const firstGate = new Promise<void>((resolveGate) => {
+      releaseFirst = resolveGate;
+    });
+    let activeDiscoveries = 0;
+    let maximumActiveDiscoveries = 0;
+    const discoverLongsysModelIds = vi.fn(async (apiKey: string) => {
+      activeDiscoveries += 1;
+      maximumActiveDiscoveries = Math.max(maximumActiveDiscoveries, activeDiscoveries);
+      if (apiKey === "test-key-a") await firstGate;
+      activeDiscoveries -= 1;
+      return apiKey === "test-key-a" ? ["model-a"] : ["model-b"];
+    });
+    const runtime = createProviderRuntime({
+      zcodeBuiltinFilePath: resolve(
+        import.meta.dirname,
+        "../../../config/provider/zcode-builtin.test.json",
+      ),
+      personalFilePath: join(root, "personal.json"),
+      watch: false,
+      discoverLongsysModelIds,
+    });
+
+    const first = runtime.providerSettings.configureLongsysProvider({ apiKey: "test-key-a" });
+    const second = runtime.providerSettings.configureLongsysProvider({ apiKey: "test-key-b" });
+    await vi.waitFor(() => expect(discoverLongsysModelIds).toHaveBeenCalledTimes(1));
+    releaseFirst();
+    await Promise.all([first, second]);
+
+    expect(maximumActiveDiscoveries).toBe(1);
+    expect(discoverLongsysModelIds.mock.calls.map(([apiKey]) => apiKey)).toEqual([
+      "test-key-a",
+      "test-key-b",
+    ]);
+    expect(
+      (await runtime.configService.read()).personalProviders.get("longsys")?.personalModelIds,
+    ).toEqual(["model-b"]);
     runtime.dispose();
   });
 

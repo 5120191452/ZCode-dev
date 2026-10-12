@@ -34,6 +34,9 @@ export interface IProviderSettingsService {
   createPersonalProvider(
     input?: Parameters<ProviderSettingsFacade["createPersonalProvider"]>[0],
   ): Promise<ProviderSettingsCreationResult>;
+  configureLongsysProvider(
+    input: LongsysProviderConfigurationInput,
+  ): Promise<ProviderSettingsCreationResult>;
   resolveModelConfig(input: ResolveModelConfigInput): Promise<ModelConfigResolution>;
   savePersonalProviderOverlay(
     providerId: ProviderId,
@@ -69,6 +72,14 @@ export interface IProviderSettingsService {
     input: ProviderSettingsConnectivityRequest,
   ): Promise<ModelConnectivityResult>;
 }
+
+export interface LongsysProviderConfigurationInput {
+  readonly apiKey: string;
+}
+
+export type LongsysProviderProvisioner = (
+  input: LongsysProviderConfigurationInput,
+) => Promise<ProviderSettingsCreationResult>;
 
 export const IProviderSettingsService = createServiceDescriptor<IProviderSettingsService>(
   ServiceChannels.ProviderSettings,
@@ -110,6 +121,7 @@ export function createProviderSettingsService(
   facade: ProviderSettingsFacade,
   ensureReady: () => Promise<void> = async () => {},
   testConnectivity?: ProviderSettingsConnectivityTester,
+  configureLongsysProvider?: LongsysProviderProvisioner,
 ): IProviderSettingsService {
   return {
     onDidChange: toEvent((listener) => facade.onDidChange(listener)),
@@ -124,6 +136,13 @@ export function createProviderSettingsService(
     createPersonalProvider: async (input) => {
       await ensureReady();
       return facade.createPersonalProvider(input);
+    },
+    configureLongsysProvider: async (input) => {
+      await ensureReady();
+      if (!configureLongsysProvider) {
+        throw new Error("当前 Environment 未装配 Longsys Provider 配置能力");
+      }
+      return configureLongsysProvider(input);
     },
     resolveModelConfig: async (input) => {
       await ensureReady();

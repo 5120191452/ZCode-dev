@@ -5,6 +5,7 @@ import {
 import {
   ProviderRegistryService,
   ProviderSettingsFacade,
+  ApiKeyAccessConfig,
   createFailClosedAccountProviderConfigSnapshot,
   type AccountProviderConfigSnapshot,
   type ProviderConfigSnapshot,
@@ -23,18 +24,23 @@ import {
   type IProviderSettingsService,
   type ModelSelectionConfiguredDefaultSource,
   type ProviderSettingsConnectivityTester,
+  type LongsysProviderProvisioner,
 } from "./providerFacadeServices.js";
 
 export interface ProviderRuntimeOptions extends ProviderConfigRuntimeOptions {
   readonly accountSource?: RefreshableProviderSource<AccountProviderConfigSnapshot>;
   readonly testConnectivity?: ProviderSettingsConnectivityTester;
+  readonly discoverLongsysModelIds?: LongsysModelDiscoverer;
 }
+
+export type LongsysModelDiscoverer = (apiKey: string) => Promise<readonly string[]>;
 
 export interface ProviderRuntimeDependencies {
   readonly configRuntime: ProviderConfigRuntime;
   readonly accountSource?: RefreshableProviderSource<AccountProviderConfigSnapshot>;
   readonly disposeAccountSource?: () => void;
   readonly testConnectivity?: ProviderSettingsConnectivityTester;
+  readonly discoverLongsysModelIds?: LongsysModelDiscoverer;
   readonly modelSelectionConfiguredDefaultSource?: ModelSelectionConfiguredDefaultSource;
   readonly disposeModelSelectionConfiguredDefaultSource?: () => void;
 }
@@ -101,10 +107,24 @@ export class ProviderRuntime {
     );
     const ensureReady = () => this.start();
     const settingsFacade = new ProviderSettingsFacade(this.registryService, mutations);
+    const configureLongsysProvider = dependencies.discoverLongsysModelIds
+      ? createLongsysProviderProvisioner({
+          discoverModelIds: dependencies.discoverLongsysModelIds,
+          configure: (apiKey, modelIds) =>
+            this.configService.upsertDiscoveredPersonalProvider({
+              templateId: "longsys",
+              access: new ApiKeyAccessConfig({ apiKey }),
+              modelIds,
+            }),
+          refresh: (reason) => this.registryService.refresh(reason),
+          getView: () => settingsFacade.getView(),
+        })
+      : undefined;
     this.providerSettings = createProviderSettingsService(
       settingsFacade,
       ensureReady,
       dependencies.testConnectivity,
+      configureLongsysProvider,
     );
     this.#modelSelectionRuntime = createModelSelectionService(
       createNodeModelSelectionFacade(this.registryService),
@@ -194,7 +214,8 @@ function createSettingsMutationTarget(
 }
 
 export function createProviderRuntime(options: ProviderRuntimeOptions): ProviderRuntime {
-  const { accountSource, testConnectivity, ...configRuntimeOptions } = options;
+  const { accountSource, testConnectivity, discoverLongsysModelIds, ...configRuntimeOptions } =
+    options;
   const configRuntime = createProviderConfigRuntime(configRuntimeOptions);
   const modelSelectionConfiguredDefaultSource = new NodeModelSelectionConfigRepository({
     personalRepository: configRuntime.personalRepository,
@@ -203,10 +224,44 @@ export function createProviderRuntime(options: ProviderRuntimeOptions): Provider
     configRuntime,
     accountSource,
     testConnectivity,
+    discoverLongsysModelIds,
     modelSelectionConfiguredDefaultSource,
     disposeModelSelectionConfiguredDefaultSource: () =>
       modelSelectionConfiguredDefaultSource.dispose(),
   });
+}
+
+function createLongsysProviderProvisioner({
+  discoverModelIds,
+  configure,
+  refresh,
+  getView,
+}: {
+  discoverModelIds: LongsysModelDiscoverer;
+  configure: (
+    apiKey: string,
+    modelIds: readonly string[],
+  ) => Promise<{ readonly providerId: string }>;
+  refresh: (reason: string) => Promise<unknown>;
+  getView: () => ReturnType<ProviderSettingsFacade["getView"]>;
+}): LongsysProviderProvisioner {
+  let queue: Promise<void> = Promise.resolve();
+  return (input) => {
+    const operation = queue.then(async () => {
+      const apiKey = input.apiKey.trim();
+      if (!apiKey) throw new Error("Longsys API Key 不能为空");
+      // 远端发现成功后才进入 Personal Repository 的单次事务，防止失败留下半配置。
+      const modelIds = await discoverModelIds(apiKey);
+      const created = await configure(apiKey, modelIds);
+      await refresh("longsys-provider-configured");
+      return { providerId: created.providerId, view: getView() };
+    });
+    queue = operation.then(
+      () => undefined,
+      () => undefined,
+    );
+    return operation;
+  };
 }
 
 export function createProviderRuntimeFromConfigRuntime(

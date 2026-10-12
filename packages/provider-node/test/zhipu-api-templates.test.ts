@@ -10,7 +10,16 @@ describe("Zhipu four manual API templates", () => {
         await readFile(new URL(`../../../config/provider/${filename}`, import.meta.url), "utf8"),
       );
       const templates = release.config.providerConfigRules.templateRules;
-      for (const template of templates) {
+      const zhipuTemplateIds = new Set([
+        "zai-api",
+        "zai-standard-api",
+        "bigmodel-api",
+        "bigmodel-standard-api",
+      ]);
+      // Bugfix: 本测试只约束四个智谱模板；其他 API Key 模板可以没有 Key 管理页。
+      for (const template of templates.filter((candidate: { templateId: string }) =>
+        zhipuTemplateIds.has(candidate.templateId),
+      )) {
         expect(
           new URL(template.config.access.apiKeyManagementUrl).protocol,
           template.templateId,

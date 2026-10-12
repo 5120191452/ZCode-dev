@@ -10,6 +10,24 @@ import {
 } from "../src/model-provider/providerFacadeServices.js";
 
 describe("Provider Settings 目标环境写入", () => {
+  it("Longsys 配置只向 Host provisioner 传递 API Key", async () => {
+    const view = { revision: 9, providerTemplates: [], providerOrder: [], providers: [] };
+    const configureLongsysProvider = vi.fn(async () => ({ providerId: "longsys", view }));
+    const facade = { onDidChange: vi.fn() } as unknown as ProviderSettingsFacade;
+    const service = createProviderSettingsService(
+      facade,
+      async () => {},
+      undefined,
+      configureLongsysProvider,
+    );
+
+    await expect(service.configureLongsysProvider({ apiKey: "test-key" })).resolves.toEqual({
+      providerId: "longsys",
+      view,
+    });
+    expect(configureLongsysProvider).toHaveBeenCalledWith({ apiKey: "test-key" });
+  });
+
   it.each(["missing-provider", "missing-model", "upstream"])(
     "连接测试边界区分 %s",
     async (kind) => {

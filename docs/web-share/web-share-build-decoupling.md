@@ -25,6 +25,9 @@
 - `@zcode/share-ui` 提供 Share 所需的只读 presentation 入口；Desktop/Remote 继续使用完整
   `@zcode/ui`。
 - Share 与完整 Web 共用协议类型和已确认的只读展示实现，不共用运行态 service。
+- Vite 对 `@zcode/shared` 源码入口的别名只能精确匹配包根；
+  `@zcode/shared/*` 子路径必须继续通过包 `exports` 解析，不能被重写为
+  `packages/shared/src/index.ts/*`。
 - Remote 构建继续保留 CUA secret 与 CUA Git 依赖。
 
 ## 构建链路
@@ -45,3 +48,5 @@ Share Dockerfile 不再需要 `zcode_cua_git_user` 和 `zcode_cua_git_token` Bui
 - `/cn/share`、`/share`、callback、mock fixture 和资源路径保持可用。
 - 完整 Web 和 Remote v4 的构建依赖边界不变。
 - Share 页面不创建 Host、Agent、service 或 remote session。
+- `pnpm --filter @zcode/web-share build` 可解析 `mcp-apps`、`zcode-protocol-v4`、
+  `model-config` 和 `config-schema` 等 shared 子路径并完成构建。

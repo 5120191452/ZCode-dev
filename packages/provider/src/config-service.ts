@@ -3,6 +3,7 @@ import type {
   ModelConfigRules,
   ModelId,
   ProviderConfig,
+  ProviderAccessConfig,
   ProviderId,
   ProviderTemplateId,
   ProviderConfigRule,
@@ -57,6 +58,13 @@ export interface CreatePersonalProviderInput {
   readonly providerName?: string;
   readonly locale?: ProviderTemplateLocale;
   readonly initialConfig?: ProviderConfig;
+}
+
+export interface UpsertDiscoveredPersonalProviderInput {
+  readonly templateId: ProviderTemplateId;
+  readonly locale?: ProviderTemplateLocale;
+  readonly access: ProviderAccessConfig;
+  readonly modelIds: readonly ModelId[];
 }
 
 /** Facade 提供的 Host 内部成员事实；不得接受 Renderer 自报的模型名单。 */
@@ -271,6 +279,61 @@ export class ProviderConfigService implements ProviderSource<ProviderConfigSnaps
     });
     if (!createdProviderId) throw new Error("Personal Provider 创建失败");
     return Object.freeze({ providerId: createdProviderId });
+  }
+
+  /** Host 发现结果的专用原子写入；Renderer 不得自行提交远端模型成员。 */
+  async upsertDiscoveredPersonalProvider(
+    input: UpsertDiscoveredPersonalProviderInput,
+  ): Promise<PersonalProviderCreation> {
+    const zcodeBuiltin = await this.#zcodeBuiltinSource.read();
+    const templateId = normalizeId("templateId", input.templateId);
+    const template = zcodeBuiltin.providerTemplates?.get(templateId);
+    if (!template) throw new Error(`Provider Template 不存在: ${templateId}`);
+    const modelIds = uniqueInOrder(
+      input.modelIds.map((modelId) => normalizeId("modelId", modelId)),
+    );
+    if (modelIds.length === 0) throw new Error("发现的 Model 列表不能为空");
+
+    let configuredProviderId: ProviderId | undefined;
+    await this.#updatePersonal((current) => {
+      const existingRule = current.providers.rules().find((rule) => rule.templateId === templateId);
+      const providerId =
+        existingRule?.providerId ??
+        nextPersonalProviderId(
+          new Set([...zcodeBuiltin.providers.keys(), ...current.providers.keys()]),
+          templateId,
+        );
+      configuredProviderId = providerId;
+      const providers = current.providers.setRule({
+        ...existingRule,
+        providerId,
+        templateId,
+        enabled: true,
+        providerName:
+          existingRule?.providerName ??
+          resolveProviderTemplateName(templateId, template, input.locale ?? "en-US"),
+        config: new ProviderConfigValue({
+          group: "standard-personal",
+          access: input.access,
+          personalModelIds: modelIds,
+          modelOrder: modelIds,
+        }),
+      });
+      return {
+        providers,
+        models: current.models,
+        providerOrder: existingRule
+          ? current.providerOrder
+          : appendCurrentProviderOrder(
+              zcodeBuiltin.providers,
+              providers,
+              current.providerOrder,
+              providerId,
+            ),
+      };
+    });
+    if (!configuredProviderId) throw new Error("Longsys Provider 配置失败");
+    return Object.freeze({ providerId: configuredProviderId });
   }
 
   deletePersonalProvider(providerId: ProviderId): Promise<ProviderConfigLayerSnapshot> {

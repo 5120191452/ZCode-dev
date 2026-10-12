@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import {
+  ApiKeyAccessConfig,
   ModelConfig,
   ModelConfigRules,
   ModelOptionSpecsConfig,
@@ -869,6 +870,53 @@ describe("ProviderConfigService", () => {
         initialConfig: new ProviderConfig({ group: "zai-family" }),
       }),
     ).rejects.toThrow();
+  });
+
+  it("Longsys 发现结果在一个事务中幂等写入 Key 和模型成员", async () => {
+    const template = new ProviderTemplate({
+      templateId: "longsys",
+      templateNameMap: { "zh-CN": "Longsys AI", "en-US": "Longsys AI" },
+      config: createApiKeyProviderConfig({
+        label: "Longsys AI",
+        apiFormat: "openai-chat-completions",
+        baseURL: "https://aicode.longsys.com/v1",
+        models: [],
+      }),
+    });
+    const personal = new MemoryPersonalRepository(layerSnapshot("personal-1"));
+    const service = new ProviderConfigService({
+      zcodeBuiltinSource: new MutableSource({
+        ...layerSnapshot("zcodeBuiltin-1"),
+        providerTemplates: new ProviderTemplateMap([["longsys", template]]),
+      }),
+      personalRepository: personal,
+    });
+
+    const first = await service.upsertDiscoveredPersonalProvider({
+      templateId: "longsys",
+      locale: "zh-CN",
+      access: new ApiKeyAccessConfig({ apiKey: "test-key-a" }),
+      modelIds: [" GLM-5.3-Flash ", "Default_coder", "GLM-5.3-Flash"],
+    });
+    const firstProvider = personal.current.providers.get(first.providerId);
+    expect(firstProvider?.access?.toJSON()).toEqual({ type: "api-key", apiKey: "test-key-a" });
+    expect(firstProvider?.personalModelIds).toEqual(["GLM-5.3-Flash", "Default_coder"]);
+    expect(firstProvider?.modelOrder).toEqual(["GLM-5.3-Flash", "Default_coder"]);
+
+    const second = await service.upsertDiscoveredPersonalProvider({
+      templateId: "longsys",
+      locale: "en-US",
+      access: new ApiKeyAccessConfig({ apiKey: "test-key-b" }),
+      modelIds: ["Web_model", "GLM-5.3"],
+    });
+
+    expect(second.providerId).toBe(first.providerId);
+    expect(personal.current.providers.keys()).toEqual([first.providerId]);
+    expect(personal.current.providers.get(first.providerId)?.toJSON()).toMatchObject({
+      access: { type: "api-key", apiKey: "test-key-b" },
+      personalModelIds: ["Web_model", "GLM-5.3"],
+      modelOrder: ["Web_model", "GLM-5.3"],
+    });
   });
 
   it("并发创建同一 Template 时仍生成唯一名称", async () => {

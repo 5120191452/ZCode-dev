@@ -8,6 +8,7 @@ export {
   type ModelSelectionViewInput,
   type ProviderSettingsProviderView,
   type ProviderSettingsView,
+  type LongsysProviderConfigurationInput,
 } from "./model-provider/providerFacadeServices.js";
 export {
   createAccountRequestAuthService,

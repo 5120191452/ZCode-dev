@@ -282,6 +282,7 @@ const BROWSER_PERMISSION_MANUAL_REVIEW_SPEC_GLOB =
   "./test/e2e/browser-permission/manual-review/**/*.test.ts";
 const GIT_COMMIT_DIALOG_UI_FLOW_SPEC = "git-commit-dialog-ui-flow.test.ts";
 const OAUTH_CREDENTIAL_RECOVERY_SPEC = "oauth-credential-recovery.test.ts";
+const LONGSYS_PROVIDER_ONBOARDING_SPEC = "longsys-provider-onboarding.test.ts";
 const JWT_EXPIRY_REAUTHENTICATION_SPEC = "jwt-expiry-reauthentication.test.ts";
 const SUBAGENT_CODING_PLAN_LOGIN_CATALOG_STALE_SPEC =
   "subagent-coding-plan-login-catalog-stale.test.ts";
@@ -3254,17 +3255,24 @@ function seedE2EStartupState(specs: string[] = []) {
   const codingPlanTeamSpec = shouldUseCodingPlanTeamMock(specs);
   const codingPlanUpgradeE2E = isCodingPlanUpgradeE2E(specs);
   const oauthCredentialRecoverySpec = isOAuthCredentialRecoverySpec(specs);
+  const longsysProviderOnboardingSpec = isLongsysProviderOnboardingSpec(specs);
   const jwtExpiryReauthenticationSpec = isJwtExpiryReauthenticationSpec(specs);
   const subagentLoginCatalogStaleSpec = isSubagentCodingPlanLoginCatalogStaleSpec(specs);
   const builtInSubagentModelOverridesSpec = isBuiltInSubagentModelSelectionOverridesSpec(specs);
   const providerReadinessColdStartFixture = usesProviderReadinessColdStartFixture(specs);
+  const shouldSeedEmptyCredentials =
+    providerReadinessColdStartFixture || longsysProviderOnboardingSpec;
   const shouldUseBigmodelAuth = codingPlanTeamSpec || codingPlanUpgradeE2E;
   const authProviderId = shouldUseBigmodelAuth ? BIGMODEL_PROVIDER_ID : E2E_AUTH_PROVIDER_ID;
   writeFileSync(
     E2E_APP_SETTINGS_FILE,
     JSON.stringify(
       {
-        providerFamilyDomain: shouldUseBigmodelAuth ? "bigmodel" : "zai",
+        ...(longsysProviderOnboardingSpec
+          ? {}
+          : {
+              providerFamilyDomain: shouldUseBigmodelAuth ? "bigmodel" : "zai",
+            }),
         providerFamilyDomainMigrated: true,
         providerFamilyDomainUpdatedAt: now,
         ...(modelProviderRegressionFixture
@@ -3329,7 +3337,7 @@ function seedE2EStartupState(specs: string[] = []) {
   writeFileSync(
     E2E_APP_CREDENTIALS_FILE,
     JSON.stringify(
-      providerReadinessColdStartFixture
+      shouldSeedEmptyCredentials
         ? {}
         : // Bug 根因：I20 不验证账号登录，却播种假 ZCode JWT；带账号身份的旁路请求
           // 会把它发往真实控制面，401 随后弹出登录过期对话框并遮挡目标交互。
@@ -3367,6 +3375,10 @@ function seedE2EStartupState(specs: string[] = []) {
 
 function isOAuthCredentialRecoverySpec(specs: string[] = []) {
   return workerSpecsContain(specs, OAUTH_CREDENTIAL_RECOVERY_SPEC);
+}
+
+function isLongsysProviderOnboardingSpec(specs: string[] = []) {
+  return workerSpecsContain(specs, LONGSYS_PROVIDER_ONBOARDING_SPEC);
 }
 
 function isJwtExpiryReauthenticationSpec(specs: string[] = []) {
@@ -4107,9 +4119,13 @@ This child must fail before sending a provider request when the Team scope is un
 }
 
 async function seedUpstreamE2EModelConfig(specs: string[] = []) {
-  if (isOAuthCredentialRecoverySpec(specs) || usesProviderReadinessColdStartFixture(specs)) {
+  if (
+    isOAuthCredentialRecoverySpec(specs) ||
+    isLongsysProviderOnboardingSpec(specs) ||
+    usesProviderReadinessColdStartFixture(specs)
+  ) {
     // Bugfix: OAuth 凭据恢复及 provider-readiness 冷启动 fixture 必须保持
-    // 无可用本地模型配置，避免默认 上游 回放 provider 绕过登录/执行门禁。
+    // 无可用本地模型配置；Longsys 首页 case 也必须从未登录、无 Provider 的真实冷启动门禁进入。
     return;
   }
 

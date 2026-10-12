@@ -42,6 +42,14 @@ vi.mock("@/i18n/IntlProvider.js", () => ({
   }),
 }));
 
+vi.mock("@/login/LoginApiKeyForm.js", () => ({
+  LoginApiKeyForm: () =>
+    createElement("input", {
+      "data-testid": "login-api-key-input",
+      "aria-label": "Longsys API Key",
+    }),
+}));
+
 vi.mock("@/store/StoreProvider.js", () => ({
   useZCodeStore: (selector: (state: unknown) => unknown) =>
     selector({
@@ -83,6 +91,7 @@ describe("WelcomeScreen", () => {
     expect(html).toContain("border-popover-border");
     expect(html).toContain("shadow-md");
     expect(html).toContain("<h1");
+    expect(html).toContain('data-testid="login-api-key-input"');
     expect(html).not.toContain("DialogTitle");
   });
 
@@ -102,7 +111,7 @@ describe("WelcomeScreen", () => {
     expect(html).not.toContain("bg-destructive text-destructive-foreground");
   });
 
-  it("地域标签使用登录按钮前景色弱强调样式", async () => {
+  it("普通首页只展示 Longsys API Key，不展示 OAuth Provider 按钮", async () => {
     oauthState.status = "idle";
     oauthState.error = null;
     oauthState.loadingProviders = false;
@@ -118,9 +127,8 @@ describe("WelcomeScreen", () => {
     const { WelcomeScreen } = await import("@/WelcomeScreen.js");
     const html = renderToStaticMarkup(createElement(WelcomeScreen, { onComplete: vi.fn() }));
 
-    expect(html).toContain("border-primary-foreground/30");
-    expect(html).toContain("text-primary-foreground/60");
-    expect(html).not.toContain("bg-primary-foreground/10");
-    expect(html).not.toContain("button-gradient");
+    expect(html).toContain('data-testid="login-api-key-input"');
+    expect(html).not.toContain("login.oauth.provider");
+    expect(html).not.toContain("login-use-api-key-button");
   });
 });

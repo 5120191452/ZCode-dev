@@ -839,6 +839,7 @@ export function ModelProviderSectionDetail({
   }
 
   const customProvider = selectedNavItem.provider;
+  const editability = resolvePersonalProviderEditability(customProvider.templateId);
   const customApiKeyUrl = customProvider.templateId
     ? getProviderFormApiKeyManagementUrl(customProvider)
     : undefined;
@@ -856,8 +857,8 @@ export function ModelProviderSectionDetail({
       }
       onTestModel={onTestModel}
       presetApiKeyUrl={customApiKeyUrl}
-      readOnlyEndpoints={false}
-      nameEditable
+      readOnlyEndpoints={editability.readOnlyEndpoints}
+      nameEditable={editability.nameEditable}
       onOpenPresetApiKey={
         customApiKeyUrl
           ? () => {
@@ -867,6 +868,14 @@ export function ModelProviderSectionDetail({
       }
     />
   );
+}
+
+export function resolvePersonalProviderEditability(templateId: string | null | undefined): {
+  readonly readOnlyEndpoints: boolean;
+  readonly nameEditable: boolean;
+} {
+  const fixed = templateId === "longsys";
+  return { readOnlyEndpoints: fixed, nameEditable: !fixed };
 }
 
 export function resolvePurchaseChoiceSelectionIntent(

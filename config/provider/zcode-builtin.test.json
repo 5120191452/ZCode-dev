@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": 31,
+  "revision": 32,
   "config": {
     "providerConfigRules": {
       "templateRules": [
@@ -139,6 +139,27 @@
             "logo": {
               "type": "builtin",
               "key": "bigmodel"
+            }
+          }
+        },
+        {
+          "templateId": "longsys",
+          "templateNameMap": {
+            "zh-CN": "Longsys AI",
+            "en-US": "Longsys AI"
+          },
+          "config": {
+            "access": {
+              "type": "api-key"
+            },
+            "api": {
+              "type": "openai-chat-completions",
+              "baseUrl": "https://aicode.longsys.com/v1"
+            },
+            "builtinModelIds": [],
+            "logo": {
+              "type": "builtin",
+              "key": "longsys"
             }
           }
         },

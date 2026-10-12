@@ -58,4 +58,32 @@ describe("useProviderAvailabilityLoginEntryGuard", () => {
     await waitFor(() => expect(setLoginEntryOpen).toHaveBeenCalledWith(false));
     expect(refreshProviderState).not.toHaveBeenCalled();
   });
+
+  it("已有可执行 Longsys Personal Provider 时不要求 Z.ai/BigModel family domain", async () => {
+    const setLoginEntryOpen = vi.fn();
+    const view = {
+      revision: 2,
+      providers: [
+        {
+          providerId: "longsys",
+          config: { kind: "api" as const },
+          models: [{ modelId: "GLM-5.3-Flash", config: {} }],
+        },
+      ],
+    };
+
+    renderHook(() =>
+      useProviderAvailabilityLoginEntryGuard({
+        user: null,
+        isRestoringOAuthSession: false,
+        providerFamilyDomain: null,
+        modelSelectionView: view,
+        refreshProviderState: vi.fn(async () => {}),
+        readModelSelectionView: async () => view,
+        setLoginEntryOpen,
+      }),
+    );
+
+    await waitFor(() => expect(setLoginEntryOpen).toHaveBeenCalledWith(false));
+  });
 });

@@ -548,6 +548,7 @@ describe("ZCode Built-in Provider Config 完整性", () => {
         "zai-standard-api",
         "bigmodel-api",
         "bigmodel-standard-api",
+        "longsys",
         "moonshot-kimi",
         "minimax",
         "deepseek",
@@ -646,6 +647,14 @@ describe("ZCode Built-in Provider Config 完整性", () => {
       });
       expect(snapshot.providerTemplates?.get("bigmodel-api")?.config.toJSON()).toMatchObject({
         access: { type: "zhipu-coding-plan-api-key" },
+      });
+      expect(snapshot.providerTemplates?.get("longsys")?.config.toJSON()).toMatchObject({
+        access: { type: "api-key" },
+        api: {
+          type: "openai-chat-completions",
+          baseUrl: "https://aicode.longsys.com/v1",
+        },
+        builtinModelIds: [],
       });
     } finally {
       source.dispose();

@@ -54,7 +54,9 @@ export function useProviderAvailabilityLoginEntryGuard({
         : modelSelectionView;
       const availability = resolveProviderAvailabilityState({ modelSelectionView: refreshedView });
       const { hasUsableProvider, providerCount } = availability;
-      const shouldOpenLoginEntry = !providerFamilyDomain || (!user && !hasUsableProvider);
+      // Bugfix: providerFamilyDomain 只描述 Z.ai/BigModel 账号族偏好，不能作为所有
+      // API Provider 的启动门禁。Longsys 已有可执行模型时不应反复打开登录页。
+      const shouldOpenLoginEntry = !user && !hasUsableProvider;
 
       // 未登录且没有可用模型配置时必须引导用户连接账号或填写 API Key。
       // 启动检查、API Key 设置回流等入口统一走这里，避免各处复制判断后语义分叉。

@@ -6,12 +6,17 @@
  * 背景(Bugfix):失败态此前只有「重新登录」(沿原渠道重试),想换渠道只能重开登录入口,
  * 容易在同一条失败链路上反复重试;且 Root 层 oauthError 触发的失败态(轮询/回调失败)会把
  * useOAuth reset 回 idle,导致失败块和渠道按钮列表同屏、状态纠缠。
- * 改为:失败态 = Alert + 重新登录 + 取消(outline,对齐等待态),取消后回到渠道列表。
+ * 改为:失败态 = Alert + 重新登录 + 取消(outline,对齐等待态),取消后回到 Longsys Key 首页。
  */
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { createElement } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { TID_OAUTH_CANCEL, TID_OAUTH_ERROR, TID_OAUTH_LOGIN_BUTTON } from "@zcode/shared";
+import {
+  TID_LOGIN_API_KEY_INPUT,
+  TID_OAUTH_CANCEL,
+  TID_OAUTH_ERROR,
+  TID_OAUTH_LOGIN_BUTTON,
+} from "@zcode/shared";
 
 const oauthState = vi.hoisted(() => ({
   status: "idle" as "idle" | "waiting" | "error",
@@ -60,6 +65,10 @@ vi.mock("@/i18n/IntlProvider.js", () => ({
       formatMessage: ({ id }: { id: string }) => id,
     },
   }),
+}));
+
+vi.mock("@/login/LoginApiKeyForm.js", () => ({
+  LoginApiKeyForm: () => createElement("input", { "data-testid": TID_LOGIN_API_KEY_INPUT }),
 }));
 
 vi.mock("@/store/StoreProvider.js", () => ({
@@ -129,7 +138,7 @@ describe("登录失败态的取消交互", () => {
     expect(screen.queryByTestId(TID_OAUTH_LOGIN_BUTTON)).toBeNull();
   });
 
-  it("点击失败态取消:清 store 错误并取消 pending,状态回 idle 后渠道列表恢复", async () => {
+  it("点击失败态取消:清 store 错误并取消 pending,状态回 idle 后 Longsys Key 首页恢复", async () => {
     const { view, WelcomeScreen } = await renderWelcomeScreen();
 
     fireEvent.click(screen.getByTestId(TID_OAUTH_CANCEL));
@@ -144,7 +153,8 @@ describe("登录失败态的取消交互", () => {
     storeState.oauthError = null;
     view.rerender(createElement(WelcomeScreen, { onComplete: vi.fn() }));
 
-    expect(screen.getByTestId(TID_OAUTH_LOGIN_BUTTON)).toBeTruthy();
+    expect(screen.getByTestId(TID_LOGIN_API_KEY_INPUT)).toBeTruthy();
+    expect(screen.queryByTestId(TID_OAUTH_LOGIN_BUTTON)).toBeNull();
     expect(screen.queryByTestId(TID_OAUTH_ERROR)).toBeNull();
     expect(screen.queryByTestId(TID_OAUTH_CANCEL)).toBeNull();
   });

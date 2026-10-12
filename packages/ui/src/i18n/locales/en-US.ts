@@ -979,6 +979,16 @@ const enUS: Record<string, string> = {
   "welcome.loginFailed": "Login failed",
   "login.title": "Welcome to ZCode",
   "login.description": "Connect your account to start using ZCode",
+  "login.longsys.title": "Connect Longsys AI",
+  "login.longsys.description": "Enter your API key to load the models available to your account.",
+  "login.longsys.apiKeyTitle": "Longsys API Key",
+  "login.longsys.apiKeyDescription":
+    "ZCode connects to the fixed Longsys AI endpoint and discovers models automatically.",
+  "login.longsys.apiKeyPlaceholder": "Enter Longsys API key",
+  "login.longsys.connect": "Connect and load models",
+  "login.longsys.emptyError": "Enter a Longsys API key.",
+  "login.longsys.noModelError": "No available Longsys models were found.",
+  "login.longsys.saveError": "Failed to connect Longsys AI: {error}",
   "login.oauth.activeProviderHint":
     "Current active provider: {provider}. Signing in again replaces the current identity.",
   "login.oauth.loadingProviders": "Loading account providers...",

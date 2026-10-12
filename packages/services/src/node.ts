@@ -188,6 +188,11 @@ export type {
   ProviderRuntimeOptions,
 } from "./model-provider/providerRuntime.js";
 export {
+  LONGSYS_BASE_URL,
+  LONGSYS_MODELS_URL,
+  discoverLongsysModelIds,
+} from "./model-provider/longsysModelDiscovery.js";
+export {
   createProviderProvisioningSource,
   listProviderProvisioningCredentialKeys,
   resolveCredentialFilePath,
@@ -413,6 +418,7 @@ import {
   IProviderSettingsService,
 } from "./model-provider/providerFacadeServices.js";
 import { createProviderSettingsConnectivityTester } from "./model-provider/providerSettingsConnectivity.js";
+import { discoverLongsysModelIds } from "./model-provider/longsysModelDiscovery.js";
 import {
   createProviderProvisioningSource,
   listProviderProvisioningCredentialKeys,
@@ -1497,6 +1503,7 @@ export function createLocalServices(options: {
         return providerConnectivityAgentService.testModelConnectivity(input);
       },
     }),
+    discoverLongsysModelIds: (apiKey) => discoverLongsysModelIds(apiClient, apiKey),
     disposeAccountSource: () => {
       disposeAccountProviderInvalidation();
       accountProviderRefreshErrorDispose();

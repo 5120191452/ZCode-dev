@@ -30,7 +30,14 @@ function resolveLocalElectronBinary() {
   }
 
   if (process.platform === "darwin") {
-    return resolve(electronPackageRoot, "dist", "Electron.app", "Contents", "MacOS", "Electron");
+    return resolve(
+      electronPackageRoot,
+      "dist",
+      "Electron.app",
+      "Contents",
+      "MacOS",
+      "Electron",
+    );
   }
 
   return resolve(electronPackageRoot, "dist", "electron");
@@ -86,7 +93,11 @@ async function waitForReady() {
   // Wait for Vite dev server
   // Vite 在不同本机 DNS/IPv6 配置下可能只监听 localhost/::1 或 127.0.0.1 其中之一。
   // 这里轮询多个 loopback 地址，避免 dev 脚本和 Vite 实际监听地址不一致导致 Electron 永远不启动。
-  const viteUrls = ["http://localhost:5174", "http://127.0.0.1:5174", "http://[::1]:5174"];
+  const viteUrls = [
+    "http://localhost:5174",
+    "http://127.0.0.1:5174",
+    "http://[::1]:5174",
+  ];
   let lastViteWaitLogAt = 0;
   while (true) {
     const failures = [];
@@ -99,7 +110,9 @@ async function waitForReady() {
     }
     const now = Date.now();
     if (now - lastViteWaitLogAt >= waitLogIntervalMs) {
-      console.log(`[dev] Waiting for Vite dev server... ${failures.join(" | ")}`);
+      console.log(
+        `[dev] Waiting for Vite dev server... ${failures.join(" | ")}`,
+      );
       lastViteWaitLogAt = now;
     }
     await sleep(300);
@@ -117,7 +130,9 @@ if (process.platform === "darwin" && existsSync(electronBinary)) {
   // zcode:// 交给一个没有项目入口的 Electron 默认壳。给本地启动副本补齐产品
   // Info.plist 后，线上 Share 页面无需感知 Dev，仍可把链接投递给已运行的 Dev 实例。
   const electronPackageJsonPath = require.resolve("electron/package.json");
-  const electronPackage = JSON.parse(await readFile(electronPackageJsonPath, "utf8"));
+  const electronPackage = JSON.parse(
+    await readFile(electronPackageJsonPath, "utf8"),
+  );
   const electronAppPath = resolve(electronBinary, "../../..");
   const devBundle = await prepareDevElectronAppBundle({
     electronAppPath,
@@ -129,10 +144,17 @@ if (process.platform === "darwin" && existsSync(electronBinary)) {
   console.log(`[dev] Prepared macOS ZCode Dev bundle: ${devBundle.appPath}`);
 }
 
+const electronEnv = { ...process.env, ELECTRON_RENDERER_URL: rendererUrl };
+// VS Code 等 Electron IDE 会把该变量传给集成终端；若继续传给桌面子进程，Electron 会按
+// 普通 Node.js 启动并导致 BrowserWindow 等 Electron 导出不可用。这里只清理目标子进程副本。
+delete electronEnv.ELECTRON_RUN_AS_NODE;
+
+// Ubuntu/AppArmor 可能同时禁止 user namespace；开发启动不得通过参数绕过 Chromium 沙箱。
+// Linux 依赖的 helper 必须按 docs/desktop/dev-runtime.md 配置为 root:root/4755。
 const electron = spawn(electronCommand, ["."], {
   cwd: root,
   stdio: "inherit",
-  env: { ...process.env, ELECTRON_RENDERER_URL: rendererUrl },
+  env: electronEnv,
   windowsHide: true,
   detached: process.platform !== "win32",
 });
