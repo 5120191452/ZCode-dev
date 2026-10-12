@@ -77,7 +77,12 @@ describe("detectDesktopCloseToTrayCapability", () => {
       .mockResolvedValueOnce({ stdout: "garbage" })
       .mockResolvedValueOnce({ stdout: "false" });
     await expect(
-      detectDesktopCloseToTrayCapability({ platform: "linux", execute }),
+      detectDesktopCloseToTrayCapability({
+        platform: "linux",
+        // Bugfix：不要继承运行测试机器的 GNOME 环境，否则提示字段会随宿主桌面变化。
+        env: { XDG_CURRENT_DESKTOP: "KDE" },
+        execute,
+      }),
     ).resolves.toEqual({ supported: false, gnomeLikeWithoutTray: false });
     expect(execute).toHaveBeenCalledTimes(3);
     expect(execute.mock.calls[2]?.[0]).toBe("qdbus");
@@ -145,6 +150,8 @@ describe("createCloseToTrayCapabilityMonitor", () => {
     });
     const monitor = createCloseToTrayCapabilityMonitor({
       platform: "linux",
+      // Bugfix：缓存语义测试固定使用非 GNOME 环境，避免宿主桌面污染断言。
+      env: { XDG_CURRENT_DESKTOP: "KDE" },
       execute,
       now: () => clock,
       staleMs: 10_000,

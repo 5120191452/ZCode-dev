@@ -841,6 +841,9 @@ bundle-root-body`,
   it("非桌面 runtime 不读取用户级技能", async () => {
     const home = makeTempHome();
     const workspacePath = join(home, "workspace");
+    // Bugfix：为 fixture 建立明确的 worktree 边界，避免宿主机 `/tmp/.git` 等祖先标记
+    // 把测试 HOME 下的用户技能误识别成祖先工作区技能。
+    mkdirSync(join(workspacePath, ".git"), { recursive: true });
     writeSkill(
       userSkillRoot(home),
       "zcode-global",

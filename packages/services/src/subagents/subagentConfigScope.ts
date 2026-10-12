@@ -1,6 +1,6 @@
 import { watch, type FSWatcher } from "chokidar";
 import { stat, watch as watchDirectory } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
+import { basename, dirname, resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { createServiceLogger } from "#src/logger/serviceLogger.js";
 
@@ -246,9 +246,15 @@ export function createSubagentConfigScope<T>(options: {
           const controller = new AbortController();
           parentWatch = controller;
           void (async () => {
-            for await (const _event of watchDirectory(parent, { signal: controller.signal })) {
+            for await (const event of watchDirectory(parent, { signal: controller.signal })) {
               if (disposed || watcher !== current) return;
-              await checkWatch();
+              const filename = event.filename?.toString();
+              // Bugfix：部分文件系统会在快速删除并重建目录时立即复用 dev/inode；
+              // 父目录已明确报告目标目录 rename 时必须强制重绑，不能仅靠 stat 身份比较。
+              const targetRenamed =
+                event.eventType === "rename" &&
+                (filename === undefined || filename === basename(anchor));
+              await checkWatch(targetRenamed);
             }
           })().catch((error) => {
             if (!controller.signal.aborted && !disposed)
