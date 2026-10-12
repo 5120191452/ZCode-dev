@@ -30,6 +30,18 @@ function fixture() {
 }
 
 describe("Weekend Hero resource lifecycle", () => {
+  it("uses the shared product brand image instead of the retired inline Z glyph", () => {
+    const f = fixture();
+    try {
+      const logo = f.window.document.querySelector(".brand-mark img[data-product-brand-logo]");
+      expect(logo).not.toBeNull();
+      expect(logo?.getAttribute("src")).toMatch(/^data:image\/png;base64,/u);
+      expect(f.window.document.querySelector(".brand-mark svg")).toBeNull();
+    } finally {
+      f.dom.window.close();
+    }
+  });
+
   it("renders the supplied gift SVG for each benefit without interpreting benefit text as HTML", () => {
     const f = fixture();
     try {

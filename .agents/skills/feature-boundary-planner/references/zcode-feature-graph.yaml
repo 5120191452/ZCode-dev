@@ -535,6 +535,57 @@ nodes:
       - "The Host discovers model ids before atomically persisting the API key and exact model membership; a failed or empty discovery leaves Personal Provider config unchanged."
       - "Repeated setup reuses one template-owned Personal Provider and replaces its credential and discovered membership without duplicate providers."
 
+  - id: "capability.product-brand-logo"
+    kind: "capability"
+    label: "Single-source ZCode product brand logo"
+    aliases: ["产品 Logo", "应用图标", "App icon", "favicon", "brand-logo"]
+    docs: ["docs/branding/product-logo-assets.md"]
+    codeSeeds:
+      - symbol: "ZCodeAboutLogo"
+        file: "packages/ui/src/components/ui/ZCodeAboutLogo.tsx"
+      - symbol: "createCustomAboutDialogHtml"
+        file: "packages/desktop/src/main/aboutWindow.ts"
+      - file: "scripts/generate-product-logo-assets.mjs"
+    invariants:
+      - "public/logo/brand-logo.png is the only product-logo master; checked-in PNG, ICO, ICNS and inline favicon outputs are deterministic derivatives."
+      - "Desktop packaging, Web favicon and first-party Renderer branding share the master without recoloring, redrawing or adding a legacy dark icon shell."
+      - "Provider, model, payment, channel, file-type, plugin and guest-page icons remain separately owned and must not inherit product branding."
+
+  - id: "state.product-brand-logo-assets"
+    kind: "state"
+    label: "Checked-in product logo master and platform projections"
+    docs: ["docs/branding/product-logo-assets.md"]
+    codeSeeds:
+      - file: "public/logo/brand-logo.png"
+      - file: "packages/desktop/build/icon.png"
+      - file: "packages/web/public/favicon.ico"
+      - file: "packages/android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml"
+
+  - id: "surface.product-brand-logo"
+    kind: "ui-surface"
+    label: "Desktop, Web and Renderer product-brand entry points"
+    docs: ["docs/branding/product-logo-assets.md"]
+    codeSeeds:
+      - symbol: "LoginPanelLogo"
+        file: "packages/ui/src/WelcomeScreen.tsx"
+      - symbol: "OnboardingWelcomeView"
+        file: "packages/ui/src/onboarding/OnboardingWelcomeView.tsx"
+      - symbol: "ConversationDraftEmptyState"
+        file: "packages/ui/src/v4/ConversationDraftEmptyState.tsx"
+      - symbol: "RootStartupLoading"
+        file: "packages/ui/src/root/RootStartupLoading.tsx"
+      - symbol: "WindowsTopLeftLogo"
+        file: "packages/ui/src/WindowsTopLeftLogo.tsx"
+      - symbol: "WorkspaceSidebarCollapsedRail"
+        file: "packages/ui/src/WorkspaceSidebar/WorkspaceSidebarCollapsedRail.tsx"
+      - symbol: "UpdateStatusDialog"
+        file: "packages/ui/src/UpdateStatusDialog.tsx"
+      - symbol: "HighspeedShareNoticeCard"
+        file: "packages/ui/src/highspeed/HighspeedShareNoticeCard.tsx"
+      - file: "packages/desktop/src/renderer/index.html"
+      - file: "packages/web/index.html"
+      - file: "packages/ui/src/assets/cloud-content/weekend-plan-hero.html"
+
   - id: "capability.plan-entitlements"
     kind: "capability"
     label: "Plan identity, entitlements, quota, and billing"
@@ -5033,7 +5084,12 @@ nodes:
     kind: "capability"
     label: "Bot group and topic collaboration"
     aliases: ["群聊机器人", "话题续接", "ReplyToChannel", "渠道提及", "Bot 历史附件"]
-    docs: ["docs/bots-feishu-group-collaboration.md", "docs/bots-topic-input-materials.md", "docs/testing/bots-e2e-coverage-matrix.md"]
+    docs:
+      [
+        "docs/bots-feishu-group-collaboration.md",
+        "docs/bots-topic-input-materials.md",
+        "docs/testing/bots-e2e-coverage-matrix.md",
+      ]
     codeSeeds:
       - file: "packages/services/src/bots/botsService.ts"
         symbol: "createBotsService"
@@ -6694,6 +6750,19 @@ edges:
     type: "must-remain-isolated-from"
     rank: "invariant-only"
     condition: "Mobile and remote Renderer attachments reuse the owning Workspace Host service; they do not create another model-discovery runtime or persist credentials locally."
+  - from: "capability.product-brand-logo"
+    to: "state.product-brand-logo-assets"
+    type: "owns"
+    rank: "must-inspect"
+  - from: "state.product-brand-logo-assets"
+    to: "surface.product-brand-logo"
+    type: "projects-to"
+    rank: "must-inspect"
+  - from: "capability.product-brand-logo"
+    to: "capability.provider-templates"
+    type: "must-remain-isolated-from-provider-branding"
+    rank: "invariant-only"
+    condition: "Changing the ZCode product master must not rewrite Provider logo assets or Provider Config.logo identity."
   - from: "surface.provider-settings"
     to: "capability.provider-registry"
     type: "configures-explicit-model-input-format-for"

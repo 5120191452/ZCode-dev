@@ -80,18 +80,20 @@ describe("about", () => {
       optimizationLine: "Optimized for Apple Silicon.",
       versionLabel: "version",
       okButtonLabel: "OK",
+      logoDataUrl: "data:image/png;base64,ZmFrZQ==",
     });
 
     expect(html).toContain("ZCode Desktop App");
     expect(html).toContain("version 0.1.7");
     expect(html).toContain("Optimized for Apple Silicon.");
     expect(html).toContain("Copyright © 2026 ZCode.");
-    expect(html).toContain("class=\"ok-button\"");
+    expect(html).toContain('class="ok-button"');
     expect(html).toContain(">OK</button>");
-    expect(html).toContain("class=\"app-logo\"");
-    expect(html).toContain("viewBox=\"0 0 256 218\"");
-    expect(html).toContain("linear-gradient(180deg, #000000 0%, #151718 100%)");
-    expect(html).toContain("class=\"about-window\"");
+    expect(html).toContain('class="app-logo"');
+    expect(html).toContain('src="data:image/png;base64,ZmFrZQ=="');
+    expect(html).not.toContain("<svg");
+    expect(html).not.toContain("linear-gradient(180deg, #000000 0%, #151718 100%)");
+    expect(html).toContain('class="about-window"');
     expect(html).toContain("border-radius: 0");
     expect(html).toContain("background: var(--about-primary)");
     expect(html).toContain("color: var(--about-primary-foreground)");
@@ -109,6 +111,7 @@ describe("about", () => {
       optimizationLine: "已针对 Apple Silicon 优化。",
       versionLabel: "版本",
       okButtonLabel: "确定",
+      logoDataUrl: "data:image/png;base64,ZmFrZQ==",
     });
 
     expect(html).toContain("版本 0.1.7");

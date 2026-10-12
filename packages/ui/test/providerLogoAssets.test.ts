@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
 
 interface ProviderLogoSourceManifest {
@@ -28,10 +29,15 @@ function readSvgSize(source: string): { width: number; height: number } {
 }
 
 describe("Provider built-in logo assets", () => {
-  it("Z.AI PNG 原样复用无额外留白的应用图标，不再误用同名旧 SVG", () => {
-    const source = readFileSync(new URL("../../desktop/build/icons/128x128.png", import.meta.url));
+  it("Z.AI PNG 保持自己的 Provider 品牌，不跟随 ZCode 产品图标变更", () => {
+    const productLogo = readFileSync(
+      new URL("../../desktop/build/icons/128x128.png", import.meta.url),
+    );
     const packaged = readFileSync(new URL("model-provider-zai-app.png", assetDirectory));
-    expect(packaged.equals(source)).toBe(true);
+    expect(packaged.equals(productLogo)).toBe(false);
+    expect(createHash("sha256").update(packaged).digest("hex")).toBe(
+      "1ec553f7eaeae4492c673e9d636692a3898d11800d912628d8c1e667222d6d19",
+    );
     expect(readPngSize(packaged)).toEqual({ width: 128, height: 128 });
   });
   it("来源清单中的每个内置 Logo 素材本身都是方形", () => {

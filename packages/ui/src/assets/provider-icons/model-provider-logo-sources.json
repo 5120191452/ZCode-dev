@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "reviewedAt": "2026-09-02",
+  "reviewedAt": "2026-10-12",
   "logos": [
     {
       "brand": "OpenRouter",
@@ -38,9 +38,9 @@
         "account:zai-team-coding-plan",
         "account:zai-offpeak-idle-plan"
       ],
-      "sourceUrl": "repository:packages/desktop/build/icons/128x128.png",
+      "sourceUrl": "repository-history:packages/desktop/build/icons/128x128.png@pre-2026-10-12-product-brand-split",
       "sourceOwner": "Z.AI",
-      "normalization": "Byte-for-byte copy of the existing 128x128 ZCode application PNG. No extra Dock padding, redraw, inversion or added outline. User decision corrected in Todo148 on 2026-09-15."
+      "normalization": "Preserved byte-for-byte from the existing 128x128 Z.AI application PNG when ZCode product branding split to its own master on 2026-10-12. Provider identity stays independent from the ZCode application icon; no extra padding, redraw, inversion or outline."
     },
     {
       "brand": "BigModel",
