@@ -70,15 +70,26 @@ pnpm bundle:desktop -- win arm64
 ## Windows 构建宿主
 
 Windows x64 安装包建议在 Windows x64 主机或 runner 上构建。在 Linux/macOS 上执行
-`--os win` 属于交叉构建，Electron Builder 修改 Windows 可执行文件时需要 Wine；Ubuntu 可先安装：
+`--os win` 属于交叉构建。Electron Builder 会通过 32 位 `rcedit-ia32.exe` 修改 Windows 可执行文件，
+所以只安装 `wine64` 仍会失败。Ubuntu 需要启用 i386 并安装 32 位 Wine：
 
 ```bash
-sudo apt install wine64
+sudo dpkg --add-architecture i386
+sudo apt update
+sudo apt install wine32:i386
 ```
 
-`bundle.mjs` 会在资源准备和应用编译前检查 `wine` / `wine64`，缺失时立即退出。`--dry-run`
-只打印命令，不要求安装 Wine。正式包还要显式设置 `ZCODE_ENV=production`，否则安全默认值会生成
-`LongsysCode Preview` 测试身份。
+`bundle.mjs` 会在资源准备和应用编译前检查 `wine`、`wine32 is missing` 诊断，并执行
+`wine cmd /c ver` 验证所选 prefix。缺少 32 位运行能力或出现 `could not load kernel32.dll` 时立即退出。
+如果默认 `~/.wine` 是安装 Wine32 前创建的，可以保留原目录并创建独立的干净 prefix：
+
+```bash
+WINEARCH=win32 WINEPREFIX=/absolute/path/to/longsyscode-wine32 wineboot --init
+WINEPREFIX=/absolute/path/to/longsyscode-wine32 pnpm bundle:desktop -- --os win --arch x64
+```
+
+两条命令必须使用同一个绝对路径。`--dry-run` 只打印命令，不要求安装 Wine。正式包还要显式设置
+`ZCODE_ENV=production`，否则安全默认值会生成 `LongsysCode Preview` 测试身份。
 
 ## CI / 脚本场景
 

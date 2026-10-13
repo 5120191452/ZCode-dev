@@ -17,9 +17,11 @@
 ## 构建宿主规则
 
 - Windows 正式安装包优先在 Windows x64 runner 上构建。
-- 在 Linux 或 macOS 上交叉构建 Windows 安装包时，Electron Builder 需要 Wine 处理 Windows
-  可执行文件；`bundle.mjs` 必须在准备资源和编译应用之前检查 `wine`/`wine64`，缺失时立即给出
-  可执行的安装或改用 Windows 构建机的提示。
+- 在 Linux 或 macOS 上交叉构建 Windows 安装包时，Electron Builder 会调用 32 位
+  `rcedit-ia32.exe` 修改 Windows 可执行文件；只有 Wine64 不满足该链路。`bundle.mjs` 必须在准备资源和
+  编译应用之前检查可执行的 `wine`，识别 Ubuntu 的 `wine32 is missing` 诊断，并通过
+  `wine cmd /c ver` 验证所选 `WINEPREFIX` 能加载 Windows 运行时；缺少 32 位 Wine 或 prefix 损坏时
+  立即给出安装 `wine32:i386`、创建独立 32 位 prefix 或改用 Windows 构建机的提示。
 - `--dry-run` 只展示命令，不要求宿主已经安装 Wine。
 - `ZCODE_ENV` 未设置时继续 fail-safe 到测试后端和 Preview 身份。生成无 `Preview` 的正式安装包必须
   显式设置 `ZCODE_ENV=production`，不得为了本地打包便利改变环境默认值。
@@ -36,13 +38,13 @@
 
 ### UI / platform surface matrix
 
-| Surface          | Display/process source                     | Commit/build sink               | Persistence boundary                            | Required result                                  |
-| ---------------- | ------------------------------------------ | ------------------------------- | ----------------------------------------------- | ------------------------------------------------ |
-| Windows NSIS     | Desktop product identity                   | electron-builder `win`/`nsis`   | 原 appId 与卸载注册身份                         | 安装包 `LongsysCode-*`; 主程序 `LongsysCode.exe` |
-| macOS bundle     | Desktop product identity                   | electron-builder `mac`          | 原 bundle/appId 与旧数据目录                    | `LongsysCode.app`，主进程 `LongsysCode`          |
-| Linux package    | `linuxExecutableName` / `linuxPackageName` | AppImage/deb/rpm/pacman         | package id 保留 `zcode*`，`.zcode` 业务数据不变 | 产物和进程使用 LongsysCode                       |
-| Electron runtime | `desktopRuntimeEnv.ts`                     | `app.setName` / `process.title` | 旧 `ZCode*` Electron 数据目录                   | 可见运行名变更，已有会话和缓存可继续读取         |
-| Cross-build CLI  | `bundle.mjs`                               | Electron Builder invocation     | 不写产品状态                                    | 无 Wine 时在资源准备前失败并说明修复方式         |
+| Surface          | Display/process source                     | Commit/build sink               | Persistence boundary                            | Required result                                    |
+| ---------------- | ------------------------------------------ | ------------------------------- | ----------------------------------------------- | -------------------------------------------------- |
+| Windows NSIS     | Desktop product identity                   | electron-builder `win`/`nsis`   | 原 appId 与卸载注册身份                         | 安装包 `LongsysCode-*`; 主程序 `LongsysCode.exe`   |
+| macOS bundle     | Desktop product identity                   | electron-builder `mac`          | 原 bundle/appId 与旧数据目录                    | `LongsysCode.app`，主进程 `LongsysCode`            |
+| Linux package    | `linuxExecutableName` / `linuxPackageName` | AppImage/deb/rpm/pacman         | package id 保留 `zcode*`，`.zcode` 业务数据不变 | 产物和进程使用 LongsysCode                         |
+| Electron runtime | `desktopRuntimeEnv.ts`                     | `app.setName` / `process.title` | 旧 `ZCode*` Electron 数据目录                   | 可见运行名变更，已有会话和缓存可继续读取           |
+| Cross-build CLI  | `bundle.mjs`                               | Electron Builder invocation     | 不写产品状态                                    | 无可用 32 位 Wine 时在资源准备前失败并说明修复方式 |
 
 ### Shared implementation and divergent behavior
 
@@ -84,7 +86,8 @@ host platform + target OS ----> bundle.mjs preflight ----> prepare/build/electro
 
 - 构建身份只有 `desktop-product-identity.mjs` 一个 owner；平台配置只消费其投影。
 - 运行时名称和 Electron 数据目录都由 `desktopRuntimeEnv.ts` 计算，但两者不再使用同一个字符串作为事实。
-- Wine 检查只观察宿主工具，不修改系统，不自动安装，也不改变产物配置。
+- Wine 检查不修改系统、不自动安装，也不改变产物配置；功能探测会让 Wine 初始化或更新当前所选
+  `WINEPREFIX`，其行为与后续 Electron Builder 调用 Wine 一致。
 - Desktop continuous、Web remote replayable、workspace identity、Provider registry 和模型配置不受影响。
 
 ## 验收用例
@@ -94,10 +97,12 @@ host platform + target OS ----> bundle.mjs preflight ----> prepare/build/electro
 | DESKTOP-ID-001 | `ZCODE_ENV=production`                  | 解析构建身份                   | `LongsysCode`、`longsyscode`，appId/package id 仍为 `dev.zcode.app` / `zcode` | unit/config   |
 | DESKTOP-ID-002 | test 或显式 Preview                     | 解析构建身份                   | `LongsysCode Preview`、`longsyscode-preview`，Preview appId/package id 不变   | unit/config   |
 | DESKTOP-ID-003 | packaged production/preview             | 解析运行时路径                 | app/process 名使用 LongsysCode；数据目录仍为对应 `ZCode*` 历史目录            | unit          |
-| DESKTOP-ID-004 | Linux host + Windows target + 无 Wine   | 执行非 dry-run bundle 前置检查 | 在 prepare/build 前失败，错误含 Wine 和 Windows runner 指引                   | unit/CLI      |
-| DESKTOP-ID-005 | Linux host + Windows target + Wine 可用 | 执行前置检查                   | 允许继续进入既有构建链                                                        | unit          |
-| DESKTOP-ID-006 | 任意宿主 + `--dry-run`                  | 输出构建命令                   | 不因 Wine 缺失失败                                                            | CLI           |
-| DESKTOP-ID-007 | Windows NSIS smoke                      | 安装/覆盖/完成页启动           | fixture 目标为 `LongsysCode.exe`，快捷方式和 launchLink 指向同一 exe          | Windows smoke |
+| DESKTOP-ID-004 | Linux host + Windows target + 无 Wine   | 执行非 dry-run bundle 前置检查 | 在 prepare/build 前失败，错误含 Wine32 安装和 Windows runner 指引             | unit/CLI      |
+| DESKTOP-ID-005 | Linux host + Windows target + 仅 Wine64 | 执行前置检查                   | 识别 `wine32 is missing`，在 prepare/build 前失败                             | unit/CLI      |
+| DESKTOP-ID-006 | 32 位 Wine 已安装但 prefix 损坏         | 执行前置检查                   | 功能探测失败，在 prepare/build 前给出新建独立 prefix 指引                     | unit/CLI      |
+| DESKTOP-ID-007 | 任意宿主 + `--dry-run`                  | 输出构建命令                   | 不因 Wine 缺失失败                                                            | CLI           |
+| DESKTOP-ID-008 | 非 Windows host + 32 位 Wine 可用       | 执行前置检查                   | 允许继续进入既有构建链                                                        | unit          |
+| DESKTOP-ID-009 | Windows NSIS smoke                      | 安装/覆盖/完成页启动           | fixture 目标为 `LongsysCode.exe`，快捷方式和 launchLink 指向同一 exe          | Windows smoke |
 
 无需新增交互 E2E：变更发生在安装产物和主进程壳层，证据由 identity/config 单测、真实 NSIS 编译 smoke
 和最终平台打包提供；Renderer 内交互和状态提交路径没有变化。

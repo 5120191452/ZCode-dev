@@ -85,28 +85,59 @@ const artifactArchHintsByArch = {
   arm64: ["arm64", "aarch64"],
 };
 
-function isCommandAvailable(command) {
-  const result = spawnSync(command, ["--version"], { stdio: "ignore" });
-  return result.status === 0 && !result.error;
+const missingWine32Pattern = /(?:wine32 is missing|install wine32(?::i386)?)/i;
+
+function formatSpawnProbeOutput(result) {
+  return [result.stdout, result.stderr, result.error?.message].filter(Boolean).join("\n");
+}
+
+function probeWineRuntime() {
+  const versionResult = spawnSync("wine", ["--version"], { encoding: "utf8" });
+  const versionOutput = formatSpawnProbeOutput(versionResult);
+  if (
+    versionResult.status !== 0 ||
+    versionResult.error ||
+    missingWine32Pattern.test(versionOutput)
+  ) {
+    return {
+      available: versionResult.status === 0 && !versionResult.error,
+      output: versionOutput,
+    };
+  }
+
+  const runtimeResult = spawnSync("wine", ["cmd", "/c", "ver"], {
+    encoding: "utf8",
+    env: { ...process.env, WINEDEBUG: process.env.WINEDEBUG ?? "-all" },
+  });
+  return {
+    available: runtimeResult.status === 0 && !runtimeResult.error,
+    output: [versionOutput, formatSpawnProbeOutput(runtimeResult)].filter(Boolean).join("\n"),
+  };
 }
 
 export function assertPackagingHostPrerequisites({
   targetOs,
   hostPlatform = process.platform,
   dryRun = false,
-  commandAvailable = isCommandAvailable,
+  probeWine = probeWineRuntime,
 }) {
   if (dryRun || targetOs !== "win" || hostPlatform === "win32") {
     return;
   }
 
-  if (commandAvailable("wine") || commandAvailable("wine64")) {
+  const wine = probeWine();
+  // Bugfix: Ubuntu 只安装 wine64 时，`wine --version` 仍会返回 0，但会在 stderr 明确报告
+  // wine32 缺失。electron-builder 后续运行的是 rcedit-ia32.exe，不能把这种宿主误判为可用。
+  if (wine.available && !missingWine32Pattern.test(wine.output)) {
     return;
   }
 
   throw new Error(
-    "Windows cross-build requires Wine to modify Electron executables. " +
-      "On Ubuntu install it with `sudo apt install wine64`, then rerun the bundle command; " +
+    "Windows cross-build requires Wine with 32-bit PE support because Electron Builder runs rcedit-ia32.exe. " +
+      "On Ubuntu run `sudo dpkg --add-architecture i386`, `sudo apt update`, and " +
+      "`sudo apt install wine32:i386`. If Wine is installed but its prefix is broken, run " +
+      "`WINEARCH=win32 WINEPREFIX=/absolute/path/to/longsyscode-wine32 wineboot --init`, " +
+      "then rerun the bundle command with the same WINEPREFIX; " +
       "or build on a Windows x64 runner/VM.",
   );
 }
@@ -295,7 +326,7 @@ function printHelp() {
   ZCODE_TARGET_ARCH            与 --arch 等价
 
 宿主要求:
-  Linux/macOS 交叉打包 Windows 安装包需要 Wine；Windows 原生构建不需要。
+  Linux/macOS 交叉打包 Windows 安装包需要支持 32 位 PE 的 Wine；Windows 原生构建不需要。
 `);
 }
 

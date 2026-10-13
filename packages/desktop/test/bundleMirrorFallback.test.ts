@@ -31,34 +31,60 @@ describe("未配置内网依赖源时的 electron-builder binaries 镜像", () =
 });
 
 describe("Windows 交叉打包宿主检查", () => {
-  it("Linux 缺少 wine/wine64 时在耗时构建前给出可执行提示", () => {
+  it("Linux 缺少 Wine 时在耗时构建前给出 Wine32 安装提示", () => {
     expect(() =>
       assertPackagingHostPrerequisites({
         targetOs: "win",
         hostPlatform: "linux",
-        commandAvailable: () => false,
+        probeWine: () => ({ available: false, output: "" }),
       }),
-    ).toThrow(/Wine.*sudo apt install wine64.*Windows.*runner/is);
+    ).toThrow(/Wine.*dpkg --add-architecture i386.*wine32:i386.*Windows.*runner/is);
   });
 
-  it("wine 或 wine64 任一可用即可继续交叉打包", () => {
+  it("仅有 Wine64 且 wine 报告缺少 wine32 时提前失败", () => {
     expect(() =>
       assertPackagingHostPrerequisites({
         targetOs: "win",
         hostPlatform: "linux",
-        commandAvailable: (command: string) => command === "wine64",
+        probeWine: () => ({
+          available: true,
+          output: "it looks like wine32 is missing, you should install it.\nwine-9.0",
+        }),
+      }),
+    ).toThrow(/wine32:i386/is);
+  });
+
+  it("Wine prefix 无法加载 kernel32 时给出创建独立 prefix 的提示", () => {
+    expect(() =>
+      assertPackagingHostPrerequisites({
+        targetOs: "win",
+        hostPlatform: "linux",
+        probeWine: () => ({
+          available: false,
+          output: "wine: could not load kernel32.dll, status c0000135",
+        }),
+      }),
+    ).toThrow(/WINEARCH=win32.*WINEPREFIX=.*wineboot --init/is);
+  });
+
+  it("Wine 具备 32 位运行能力时继续交叉打包", () => {
+    expect(() =>
+      assertPackagingHostPrerequisites({
+        targetOs: "win",
+        hostPlatform: "linux",
+        probeWine: () => ({ available: true, output: "wine-9.0" }),
       }),
     ).not.toThrow();
   });
 
   it("Windows 原生构建和 dry-run 不要求 Wine", () => {
-    const commandAvailable = vi.fn(() => false);
+    const probeWine = vi.fn(() => ({ available: false, output: "" }));
 
     expect(() =>
       assertPackagingHostPrerequisites({
         targetOs: "win",
         hostPlatform: "win32",
-        commandAvailable,
+        probeWine,
       }),
     ).not.toThrow();
     expect(() =>
@@ -66,9 +92,9 @@ describe("Windows 交叉打包宿主检查", () => {
         targetOs: "win",
         hostPlatform: "linux",
         dryRun: true,
-        commandAvailable,
+        probeWine,
       }),
     ).not.toThrow();
-    expect(commandAvailable).not.toHaveBeenCalled();
+    expect(probeWine).not.toHaveBeenCalled();
   });
 });
