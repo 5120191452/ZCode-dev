@@ -215,7 +215,9 @@ describe("模型请求默认 Header：Bootstrap → Adapter → 真实 SDK", () 
   ])("按真实 URL 匹配 OpenRouter，不按 Provider 名称：%s", async (baseUrl, matches) => {
     const { model, requests } = createFixture({ baseUrl, apiType: "openai-chat-completions" });
     await model.generateText(requestInput);
-    expect(requests[0]!.headers.get("x-openrouter-title")).toBe(matches ? "ZCode" : null);
+    expect(requests[0]!.headers.get("x-openrouter-title")).toBe(
+      matches ? "LongsysCode" : null,
+    );
     expect(requests[0]!.headers.get("x-openrouter-categories")).toBe(
       matches ? "programming-app" : null,
     );

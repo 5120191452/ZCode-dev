@@ -20,7 +20,7 @@ export function WindowsTopLeftLogo({
       )}
     >
       <ZCodeAboutLogo
-        alt="ZCode"
+        alt="LongsysCode"
         className={cn("pointer-events-none size-5 select-none", imageClassName)}
       />
     </div>

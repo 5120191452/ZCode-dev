@@ -686,6 +686,7 @@ export function ModelProviderSection({
     useModelProviderNavigation({
       presetProviders,
       modelProviders,
+      showAccountProviderNavigation: false,
       entitledAccountProviderIds,
       modelProvidersLoading: loading,
       displayOrder,

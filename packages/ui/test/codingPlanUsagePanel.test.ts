@@ -56,10 +56,10 @@ describe("CodingPlanUsagePanel", () => {
   it("统一使用工具调用和 ZCode MCP 的额度名称", () => {
     expect(zhMessages["settings.usage.entitlementMonthlyMcpUsage"]).toBe("工具调用");
     expect(enMessages["settings.usage.entitlementMonthlyMcpUsage"]).toBe("Tool calls");
-    expect(zhMessages["settings.usage.entitlementServerMcpUsage"]).toBe("ZCode MCP");
-    expect(enMessages["settings.usage.entitlementServerMcpUsage"]).toBe("ZCode MCP");
-    expect(zhMessages["sidebar.usage.plan.mcp"]).toBe("ZCode MCP");
-    expect(enMessages["sidebar.usage.plan.mcp"]).toBe("ZCode MCP");
+    expect(zhMessages["settings.usage.entitlementServerMcpUsage"]).toBe("LongsysCode MCP");
+    expect(enMessages["settings.usage.entitlementServerMcpUsage"]).toBe("LongsysCode MCP");
+    expect(zhMessages["sidebar.usage.plan.mcp"]).toBe("LongsysCode MCP");
+    expect(enMessages["sidebar.usage.plan.mcp"]).toBe("LongsysCode MCP");
   });
 
   it("个人套餐来源使用 Account Access，而不是请求凭据", () => {

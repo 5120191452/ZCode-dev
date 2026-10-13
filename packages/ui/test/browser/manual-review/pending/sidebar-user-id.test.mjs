@@ -84,7 +84,7 @@ async function open(params = {}, clipboard = "ok", width = 960) {
   }, clipboard);
   await page.goto(`${origin}fixture?${new URLSearchParams(params)}`);
   const trigger = page.getByRole("button", {
-    name: params.guest === "1" ? "连接使用" : "Alex",
+    name: params.guest === "1" ? "重新认证模型" : "Alex",
     exact: true,
   });
   await trigger.waitFor();

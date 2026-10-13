@@ -39,7 +39,7 @@ describe("web remote control Assistant code-comment capability", () => {
     );
     const ordinaryWebServerRoot = sliceBetween(
       source,
-      'document.title = "ZCode - Web + Server";',
+      'document.title = "LongsysCode - Web + Server";',
       "} catch (error) {",
     );
 

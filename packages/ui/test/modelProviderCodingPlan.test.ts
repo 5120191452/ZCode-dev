@@ -1070,6 +1070,51 @@ describe("model provider coding plan", () => {
     expect(customGroup?.items.map((item) => item.label)).toEqual(["Custom Provider"]);
   });
 
+  it("Longsys 定制设置隐藏 BigModel 与 Start Plan，只保留 Personal Provider", () => {
+    let capturedGroups: ModelProviderNavGroup[] = [];
+    let capturedNavigationItems: ReturnType<typeof useModelProviderNavigation>["navigationItems"] =
+      [];
+
+    function Harness() {
+      const result = useModelProviderNavigation({
+        presetProviders: [
+          {
+            id: BUILTIN_MODEL_PROVIDER_IDS.bigmodelStartPlan,
+            displayName: "BigModel",
+            provider: null,
+          },
+        ],
+        modelProviders: [
+          createProvider({
+            id: BUILTIN_MODEL_PROVIDER_IDS.bigmodelIndividualCodingPlan,
+            name: "BigModel Coding Plan",
+          }),
+          createProvider({
+            id: "longsys-personal",
+            name: "Longsys AI",
+            config: { group: "standard-personal" },
+          }),
+        ],
+        showAccountProviderNavigation: false,
+        selectedNodeKey: null,
+        setSelectedNodeKey: vi.fn(),
+        intl: { formatMessage: ({ id }: { id: string }) => id } as never,
+      });
+      capturedGroups = result.navigationGroups;
+      capturedNavigationItems = result.navigationItems;
+      return createElement("div");
+    }
+
+    renderToStaticMarkup(createElement(Harness));
+
+    expect(capturedGroups.map((group) => group.id)).toEqual(["custom"]);
+    expect(capturedNavigationItems).toHaveLength(1);
+    expect(capturedNavigationItems[0]).toMatchObject({
+      type: "custom",
+      label: "Longsys AI",
+    });
+  });
+
   it("Provider Template 和新增入口不混入已配置 Provider 导航", () => {
     let capturedGroups: ModelProviderNavGroup[] = [];
 

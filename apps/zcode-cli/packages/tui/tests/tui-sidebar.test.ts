@@ -204,7 +204,7 @@ test("production sidebar shows product header and hides developer diagnostics", 
   const lines = collectTextLines(node);
   const textNodes = collectTextNodes(node);
 
-  assert.equal(textNodes.find((item) => item.text === "ZCode")?.style.fg, "#7dd3fc");
+  assert.equal(textNodes.find((item) => item.text === "LongsysCode")?.style.fg, "#7dd3fc");
   assert.equal(textNodes.find((item) => item.text === " 1.2.3")?.style.fg, "#94a3b8");
   assert.equal(lines.includes("OpenTUI shell"), false);
   assert.equal(lines.includes("Run"), false);

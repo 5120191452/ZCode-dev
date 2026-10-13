@@ -16,7 +16,7 @@ export function OnboardingWelcomeView(props: { onStart: () => void; onOpenMigrat
           </div>
 
           <div className="space-y-2">
-            <div className="size-14" aria-label="ZCode" role="img">
+            <div className="size-14" aria-label="LongsysCode" role="img">
               <ZCodeAboutLogo className="size-full" />
             </div>
             <div className="text-4xl font-bold tracking-tight text-foreground">

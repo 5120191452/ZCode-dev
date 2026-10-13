@@ -313,7 +313,7 @@ test("renders the product version header and workspace directory footer", () => 
   assert.ok(workspaceLine);
   assert.equal(workspaceLine.length, SIDEBAR_CONTENT_WIDTH);
   assert.match(workspaceLine, /\.\.\.$/);
-  assert.ok(lines.includes("ZCode"));
+  assert.ok(lines.includes("LongsysCode"));
   assert.ok(lines.includes(" 0.0.0"));
 });
 

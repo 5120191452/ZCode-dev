@@ -45,6 +45,11 @@ interface UseModelProviderNavigationOptions {
   presetProviders: PresetProviderWithConfig[];
   modelProviders: ProviderSettingsFormProvider[];
   /**
+   * Longsys 定制版只展示 Personal Provider；关闭后账号套餐仍保留在 Host，
+   * 但不会投影成设置页侧栏节点。
+   */
+  showAccountProviderNavigation?: boolean;
+  /**
    * 当前账号明确有权益的 Provider。缺省等价于尚无账号权益；生产设置页始终显式传入。
    */
   entitledAccountProviderIds?: ReadonlySet<string>;
@@ -66,6 +71,7 @@ interface UseModelProviderNavigationOptions {
 export function useModelProviderNavigation({
   presetProviders,
   modelProviders,
+  showAccountProviderNavigation = true,
   entitledAccountProviderIds = new Set(),
   modelProvidersLoading = false,
   displayOrder,
@@ -91,8 +97,10 @@ export function useModelProviderNavigation({
 
   const codingPlanItems = useMemo(
     () =>
-      CODING_PLAN_PROVIDER_SPECS.filter((spec) =>
-        shouldShowCodingPlanForProviderFamilyDomain(spec.oauthProviderId, providerFamilyDomain),
+      CODING_PLAN_PROVIDER_SPECS.filter(
+        (spec) =>
+          showAccountProviderNavigation &&
+          shouldShowCodingPlanForProviderFamilyDomain(spec.oauthProviderId, providerFamilyDomain),
       ).map((spec) => {
         const provider = modelProviders.find((item) => item.providerId === spec.id) ?? null;
         const accountEntitled = entitledAccountProviderIds.has(spec.id);
@@ -148,6 +156,7 @@ export function useModelProviderNavigation({
       modelProviders,
       modelProvidersLoading,
       providerFamilyDomain,
+      showAccountProviderNavigation,
     ],
   );
   const connectionModeCodingPlanItems = useMemo(
@@ -223,7 +232,7 @@ export function useModelProviderNavigation({
       },
     ];
 
-    return groups;
+    return showAccountProviderNavigation ? groups : groups.filter((group) => group.id === "custom");
   }, [
     customProviders,
     codingPlanItems,
@@ -235,6 +244,7 @@ export function useModelProviderNavigation({
     pendingConnectionSelections,
     presetProviders,
     modelProviders,
+    showAccountProviderNavigation,
   ]);
 
   const navigationItems = useMemo(() => {

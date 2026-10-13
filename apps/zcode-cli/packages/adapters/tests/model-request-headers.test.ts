@@ -91,6 +91,8 @@ describe("模型 Header 合并与绑定边界", () => {
       "Bearer key",
       "Bearer key",
     ]);
-    expect(requests.every((r) => r.headers.get("x-openrouter-title") === "ZCode")).toBe(true);
+    expect(requests.every((r) => r.headers.get("x-openrouter-title") === "LongsysCode")).toBe(
+      true,
+    );
   });
 });

@@ -389,7 +389,7 @@ function LoginPanelHeader({
 
 function LoginPanelLogo() {
   return (
-    <div className="mb-1 size-16" aria-label="ZCode" role="img">
+    <div className="mb-1 size-16" aria-label="LongsysCode" role="img">
       <ZCodeAboutLogo className="size-full" />
     </div>
   );

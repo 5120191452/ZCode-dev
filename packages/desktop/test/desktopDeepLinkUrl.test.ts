@@ -196,8 +196,8 @@ describe("desktop deep link url helpers", () => {
     const { buildWindowsOpenFolderRegistryOperations, getWindowsOpenFolderMenuName } =
       await import("../src/main/desktopWindowsOpenFolderContextMenu.js");
 
-    expect(getWindowsOpenFolderMenuName("zh-CN")).toBe("在ZCode中打开");
-    expect(getWindowsOpenFolderMenuName("en-US")).toBe("Open in ZCode");
+    expect(getWindowsOpenFolderMenuName("zh-CN")).toBe("在 LongsysCode 中打开");
+    expect(getWindowsOpenFolderMenuName("en-US")).toBe("Open in LongsysCode");
 
     const operations = buildWindowsOpenFolderRegistryOperations({
       executablePath: "C:\\Program Files\\ZCode\\ZCode.exe",
@@ -210,7 +210,7 @@ describe("desktop deep link url helpers", () => {
         "HKCU\\Software\\Classes\\Directory\\shell\\ZCode.OpenInZCode",
         "/ve",
         "/d",
-        "在ZCode中打开",
+        "在 LongsysCode 中打开",
         "/f",
       ],
     });
@@ -223,7 +223,7 @@ describe("desktop deep link url helpers", () => {
         "/t",
         "REG_SZ",
         "/d",
-        "在ZCode中打开",
+        "在 LongsysCode 中打开",
         "/f",
       ],
     });

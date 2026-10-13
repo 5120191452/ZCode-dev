@@ -1,4 +1,4 @@
-# ZCode Guide Plugin Skill Discovery
+# LongsysCode Guide Plugin Skill Discovery
 
 `zcode-guide` is an official content-only plugin that provides configuration and
 self-diagnosis skills. It is default-enabled in the CLI/bootstrap official plugin

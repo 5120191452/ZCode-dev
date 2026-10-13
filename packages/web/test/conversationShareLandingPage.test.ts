@@ -74,7 +74,7 @@ describe("ConversationShareLandingPage", () => {
     expect(html).not.toContain("absolute inset-x-0 bottom-0");
     expect(html).toContain("bg-background backdrop-blur");
     expect(html).not.toContain("bg-background/95");
-    expect(html).toContain("ZCode");
+    expect(html).toContain("LongsysCode");
     expect(html).toContain("sticky");
     expect(html).toContain("text-left");
     expect(html).not.toContain("grid-cols-[minmax(0,1fr)_minmax(0,2fr)_minmax(0,1fr)]");
@@ -88,7 +88,7 @@ describe("ConversationShareLandingPage", () => {
     expect(html).toContain('data-share-scroll-viewport="true"');
     expect(html).toContain('data-markdown-table-layout-root="true"');
     expect(html).toContain("overflow-y-auto");
-    expect(html).toContain("去 ZCode 继续");
+    expect(html).toContain("去 LongsysCode 继续");
     expect(html).toContain('data-share-theme-toggle="true"');
     expect(html).toContain("切换到深色主题");
     expect(html.match(/data-share-continue-link="true"/g)?.length).toBe(2);
@@ -100,9 +100,9 @@ describe("ConversationShareLandingPage", () => {
     expect(html).toContain("rounded-xl");
     expect(html).toContain("bg-primary");
     expect(html).toContain("text-primary-foreground");
-    expect(html).not.toContain("ZCode 会话分享");
+    expect(html).not.toContain("LongsysCode 会话分享");
     expect(html).not.toContain("data-share-flag");
-    expect(html).not.toContain("下载 ZCode");
+    expect(html).not.toContain("下载 LongsysCode");
     expect(html).not.toContain("Sign out");
     expect(html).toContain("zcode://share/import?code=share-1");
   });
@@ -249,8 +249,8 @@ describe("ConversationShareLandingPage", () => {
       }),
     );
     expect(html).not.toContain("zcode://share/import");
-    expect(html).not.toContain("Open in ZCode");
-    expect(html).not.toContain("去 ZCode 继续");
+    expect(html).not.toContain("Open in LongsysCode");
+    expect(html).not.toContain("去 LongsysCode 继续");
     expect(html).toContain('data-share-theme-toggle="true"');
     expect(html).not.toContain('data-share-continue-footer="true"');
     expect(html).toContain('data-share-continue-measure="true"');

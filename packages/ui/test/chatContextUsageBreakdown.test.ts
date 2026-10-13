@@ -260,10 +260,10 @@ describe("ChatCodingPlanUsageRemainingPanel reset action", () => {
 describe("ChatCodingPlanUsageRemainingPanel MCP 额度", () => {
   it("ZCode MCP tooltip 使用精简的每日合计额度说明", () => {
     expect(zhMessages["sidebar.usage.plan.zcodeMcpDescription"]).toBe(
-      "ZCode 预置插件 MCP 每日合计额度",
+      "LongsysCode 预置插件 MCP 每日合计额度",
     );
     expect(enMessages["sidebar.usage.plan.zcodeMcpDescription"]).toBe(
-      "Daily aggregate quota for ZCode built-in plugin MCPs",
+      "Daily aggregate quota for LongsysCode built-in plugin MCPs",
     );
   });
 

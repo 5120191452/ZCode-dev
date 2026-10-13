@@ -4,13 +4,23 @@ import {
   TID_LOGIN_API_KEY_INPUT,
   TID_LOGIN_API_KEY_PROVIDER_TRIGGER,
   TID_LOGIN_API_KEY_SKIP_BUTTON,
+  TID_MODEL_PROVIDER_NAV_ITEM,
   TID_OAUTH_LOGIN_BUTTON,
+  TID_SETTINGS_PAGE,
+  TID_SETTINGS_SECTION_NAV,
+  TID_TASK_SETTINGS_BUTTON,
+  testId,
 } from "@zcode/shared";
 import {
+  DEFAULT_WORKSPACE,
   clearAppData,
+  clickTestIdByDom,
   setInputValueByTestIdDom,
   waitForTestIdByDom,
+  waitForWorkspaceApp,
 } from "../../helpers/desktop-app.js";
+import { restartIntoWorkspace, seedReplayProvider } from "../../helpers/model-provider-restart.js";
+import { sel } from "../../helpers/selectors.js";
 
 const TEST_API_KEY = "test-longsys-key-not-submitted";
 
@@ -43,7 +53,44 @@ describe("Longsys 首页 Provider onboarding", () => {
       timeoutMsg: "填写 Longsys API Key 后主动作没有变为可用",
     });
   });
+
+  it("AUTH-LONGSYS-02: 模型设置只显示 Longsys，不显示 BigModel 与 Start Plan", async function () {
+    this.timeout(120_000);
+
+    await restartIntoWorkspace({
+      afterElectronProcessExit: () =>
+        seedReplayProvider({
+          apiKey: "e2e-longsys-placeholder",
+          baseURL: "https://aicode.longsys.com/v1",
+          id: "longsys-e2e",
+          models: ["longsys-e2e-model"],
+          name: "Longsys AI",
+        }),
+    });
+    await waitForWorkspaceApp(DEFAULT_WORKSPACE, 60_000);
+    await clickTestIdByDom(TID_TASK_SETTINGS_BUTTON, { timeout: 15_000 });
+    await $(sel(TID_SETTINGS_PAGE)).waitForDisplayed({ timeout: 15_000 });
+    await clickTestIdByDom(testId(TID_SETTINGS_SECTION_NAV, "modelProvider"), {
+      timeout: 15_000,
+    });
+
+    await browser.waitUntil(async () => (await readModelProviderNavigationLabels()).length > 0, {
+      timeout: 30_000,
+      timeoutMsg: "模型设置没有显示 Longsys Provider",
+    });
+    expect(await readModelProviderNavigationLabels()).toEqual(["Longsys AI"]);
+  });
 });
+
+async function readModelProviderNavigationLabels(): Promise<string[]> {
+  return browser.execute(
+    (testIdPrefix) =>
+      Array.from(document.querySelectorAll<HTMLElement>(`[data-testid^="${testIdPrefix}-"]`)).map(
+        (element) => element.getAttribute("aria-label")?.trim() ?? "",
+      ),
+    TID_MODEL_PROVIDER_NAV_ITEM,
+  );
+}
 
 async function ensureWelcomeScreenOpen(): Promise<void> {
   await waitForTestIdByDom(TID_LOGIN_API_KEY_INPUT, {

@@ -79,7 +79,7 @@ describe("设置页 UI polish E2E", () => {
     expect(
       await browser.execute(() => {
         const logo = document.querySelector<HTMLElement>(
-          '[data-testid="settings-page"] img[alt="ZCode"]',
+          '[data-testid="settings-page"] img[alt="LongsysCode"]',
         );
         if (!logo) return null;
         const rect = logo.getBoundingClientRect();

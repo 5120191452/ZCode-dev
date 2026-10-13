@@ -488,7 +488,7 @@ export function App() {
                 <Network className="size-4 text-brand" />
               </div>
               <div className="min-w-0">
-                <h1 className="text-ui-lg font-medium">ZCode Developer Docs</h1>
+                <h1 className="text-ui-lg font-medium">LongsysCode Developer Docs</h1>
                 <p className="text-ui-sm text-foreground-subtle">{viewDescription}</p>
               </div>
             </div>

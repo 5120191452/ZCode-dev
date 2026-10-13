@@ -530,25 +530,33 @@ nodes:
         file: "packages/services/src/model-provider/providerFacadeServices.ts"
       - symbol: "upsertDiscoveredPersonalProvider"
         file: "packages/provider/src/config-service.ts"
+      - symbol: "useModelProviderNavigation"
+        file: "packages/ui/src/settings/model-provider-section/useModelProviderNavigation.ts"
     invariants:
       - "The ordinary welcome screen accepts only an API key; the Longsys base URL and OpenAI-compatible API type are fixed by the built-in template."
       - "The Host discovers model ids before atomically persisting the API key and exact model membership; a failed or empty discovery leaves Personal Provider config unchanged."
       - "Repeated setup reuses one template-owned Personal Provider and replaces its credential and discovered membership without duplicate providers."
+      - "The Longsys-branded Provider Settings navigation hides Z.ai/BigModel family and Start Plan entries without deleting persisted Account Provider facts or historical references."
 
   - id: "capability.product-brand-logo"
     kind: "capability"
-    label: "Single-source ZCode product brand logo"
-    aliases: ["产品 Logo", "应用图标", "App icon", "favicon", "brand-logo"]
+    label: "Single-source LongsysCode product brand"
+    aliases:
+      ["产品 Logo", "产品名称", "应用图标", "App icon", "favicon", "brand-logo", "LongsysCode"]
     docs: ["docs/branding/product-logo-assets.md"]
     codeSeeds:
       - symbol: "ZCodeAboutLogo"
         file: "packages/ui/src/components/ui/ZCodeAboutLogo.tsx"
       - symbol: "createCustomAboutDialogHtml"
         file: "packages/desktop/src/main/aboutWindow.ts"
+      - file: "packages/ui/src/i18n/locales/zh-CN.ts"
+      - file: "apps/zcode-cli/packages/bootstrap/src/app/official-plugin-definitions.ts"
       - file: "scripts/generate-product-logo-assets.mjs"
     invariants:
       - "public/logo/brand-logo.png is the only product-logo master; checked-in PNG, ICO, ICNS and inline favicon outputs are deterministic derivatives."
       - "Desktop packaging, Web favicon and first-party Renderer branding share the master without recoloring, redrawing or adding a legacy dark icon shell."
+      - "User-visible product copy uses LongsysCode, while ZCode-prefixed symbols, package names, protocol headers, storage paths and persisted compatibility identities remain unchanged."
+      - "The unauthenticated model entry says 重新认证模型 / Re-authenticate models without changing the existing authentication action."
       - "Provider, model, payment, channel, file-type, plugin and guest-page icons remain separately owned and must not inherit product branding."
 
   - id: "state.product-brand-logo-assets"
@@ -6731,6 +6739,16 @@ edges:
     to: "surface.longsys-api-key-onboarding"
     type: "renders-in"
     rank: "must-inspect"
+  - from: "capability.longsys-provider-onboarding"
+    to: "surface.provider-settings"
+    type: "projects-personal-provider-navigation-to"
+    rank: "must-inspect"
+    condition: "The Longsys-branded settings surface suppresses Z.ai/BigModel family and Start Plan navigation; this is a Renderer projection and does not delete Account Provider state."
+  - from: "capability.longsys-provider-onboarding"
+    to: "capability.plan-entitlements"
+    type: "must-remain-isolated-from-settings-navigation"
+    rank: "invariant-only"
+    condition: "Plan entitlement services may remain for compatibility, but they do not generate Provider Settings side-navigation entries in the Longsys-branded surface."
   - from: "surface.longsys-api-key-onboarding"
     to: "service.longsys-model-discovery"
     type: "requests-fixed-endpoint-discovery-through"
@@ -6762,7 +6780,7 @@ edges:
     to: "capability.provider-templates"
     type: "must-remain-isolated-from-provider-branding"
     rank: "invariant-only"
-    condition: "Changing the ZCode product master must not rewrite Provider logo assets or Provider Config.logo identity."
+    condition: "Changing the LongsysCode product brand must not rewrite Provider logo assets or Provider Config.logo identity."
   - from: "surface.provider-settings"
     to: "capability.provider-registry"
     type: "configures-explicit-model-input-format-for"

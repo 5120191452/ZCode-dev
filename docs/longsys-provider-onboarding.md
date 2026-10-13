@@ -41,6 +41,9 @@ Personal Provider 配置的凭据持久化边界；UI 不直接发网络请求�
    不再打开 WelcomeScreen。手机 `/remote` 继续复用 Desktop Host，不执行独立 Longsys onboarding。
 10. 设置页触发的既有 OAuth 连接请求仍可复用 WelcomeScreen 的 waiting/error 状态，但普通首页
     不提供 OAuth 选择按钮。
+11. Longsys 定制版的“模型设置”侧栏不展示 Z.ai/BigModel 内置 Family 与 Start Plan，只展示已经
+    配置的 Personal Provider；首次接入完成后的默认状态因此只保留 `Longsys AI`。该规则只裁剪
+    Renderer 导航投影，不删除旧 Account Provider 配置、凭据或历史会话引用。
 
 ## 状态所有者与事件顺序
 
@@ -89,7 +92,7 @@ ModelSelection View -> Renderer 初始模型偏好 -> 进入工作区
 | -------------------- | ----------------------------------- | -------------------------------------------- | ---------------------- | ----------------------------------- | ------------------------------ | -------------------------------- | --------------------------------------- | ------------------------------------ | ------------------------------------ |
 | 首次启动连接 Longsys | `WelcomeScreen` / `LoginApiKeyForm` | Services accessor、Provider Settings service | 表单本地 API Key draft | 固定 Longsys Template               | 非空 + Host 远端发现           | `configureLongsysProvider`       | Personal Provider Repository + Registry | Desktop/Web root；手机 remote 不运行 | OAuth family、套餐状态、任务/session |
 | 对话选择发现模型     | Composer model control              | `ModelConfigSelect` / ModelSelection View    | Composer draft         | Host preferred/first selectable     | Registry selectable/executable | 既有 model selection commit      | Agent runtime selection                 | continuous/replayable 既有语义       | Automation/Subagent 独立 commit sink |
-| 设置页查看 Longsys   | Model Provider settings             | Provider Settings View                       | 设置页 draft           | Longsys Template + Personal overlay | 既有配置完整性                 | 既有 Provider settings mutations | Personal Provider Repository            | 目标 Environment                     | Welcome API Key draft                |
+| 设置页查看 Longsys   | Model Provider settings             | Provider Settings View + Longsys 导航投影    | 设置页 draft           | Longsys Template + Personal overlay | 既有配置完整性                 | 既有 Provider settings mutations | Personal Provider Repository            | 目标 Environment                     | Welcome API Key draft、账号套餐导航  |
 
 ### Shared And Divergent Behavior
 
@@ -101,6 +104,7 @@ ModelSelection View -> Renderer 初始模型偏好 -> 进入工作区
 | Validation           | 最终执行由 Registry/ModelFactory 校验              | 首页额外校验远端模型列表              | 无模型时不能进入空 Provider    |
 | Commit effect        | Provider 设置走同一 Host 配置服务                  | Longsys 是发现后原子 upsert           | Key、成员、Registry 必须一致   |
 | Persistence/recovery | Personal Repository 与远端同步沿既有边界           | API Key draft 不恢复                  | 不把秘密复制到 Renderer 持久层 |
+| Settings visibility  | Personal Provider 仍来自 Provider Settings View    | 隐藏 Z.ai/BigModel 与 Start Plan 导航 | 不因品牌裁剪删除旧账号事实     |
 
 ### Feature Relationships
 
@@ -112,6 +116,7 @@ ModelSelection View -> Renderer 初始模型偏好 -> 进入工作区
 | should-inspect | Provider Registry         | projects-to   | ModelSelection View          | upsert 后 refresh | 首页成功后立即可选          | `providerRuntime.ts`                        |
 | should-inspect | ModelSelection View       | shared-by     | Composer/Automation/Subagent | 各入口自身提交    | 候选共享、状态不共享        | `docs/feature-impact-discovery.md`          |
 | invariant-only | Longsys onboarding        | isolated-from | OAuth family/plan state      | 普通首页          | 不伪造 Z.ai/BigModel domain | `useProviderAvailabilityLoginEntryGuard.ts` |
+| invariant-only | Longsys settings          | hides         | Z.ai/BigModel + Start Plan   | 模型设置侧栏      | 单供应商品牌入口            | `useModelProviderNavigation.ts`             |
 | invariant-only | Longsys onboarding        | isolated-from | mobile remote owner          | `/remote`         | 不另起 Provider runtime     | remote workspace architecture               |
 
 ### State Owners And Commit Sinks
@@ -133,6 +138,7 @@ ModelSelection View -> Renderer 初始模型偏好 -> 进入工作区
 | Longsys upsert 不产生重复 Provider     | repeated submit              | 同 template 重配断言                   | provider test         |
 | 其它模型入口只共享候选、不共享提交状态 | Composer/Automation/Subagent | 既有模型选择回归                       | focused regression    |
 | mobile 不创建独立 runtime              | `/remote`                    | 架构检查/既有 remote service tests     | architecture evidence |
+| 设置导航裁剪不删除旧账号配置           | Model Provider settings      | 旧 Account Provider 只是不生成侧栏项   | focused UI regression |
 
 ### Codegraph Evidence
 
@@ -159,14 +165,15 @@ OpenAI-compatible `/models` 标准响应并保持服务端顺序。
 
 ## Accepted Cases
 
-| Case ID | Setup                              | Action           | Assertions                                                      | Evidence layers           | E2E status                        |
-| ------- | ---------------------------------- | ---------------- | --------------------------------------------------------------- | ------------------------- | --------------------------------- |
-| LS-01   | 首次启动、无可执行 Provider        | 打开首页         | 只显示 Longsys Key 输入和主动作，无 OAuth/provider/URL/跳过     | UI                        | unit + E2E passed；manual pending |
-| LS-02   | `/models` 返回重复且含空 ID        | 提交有效 Key     | trim/filter/稳定去重；一个 Longsys Provider；顺序与首次返回一致 | network + repository + UI | unit covered                      |
-| LS-03   | HTTP 401/500、畸形 JSON 或空列表   | 提交 Key         | 显示脱敏错误；Provider Repository 不变；可重试                  | network + repository + UI | unit covered                      |
-| LS-04   | 已有 Longsys Provider              | 提交另一有效 Key | 复用同 providerId，原子替换 Key 与模型成员，不新增 Provider     | repository + Registry     | unit covered                      |
-| LS-05   | Longsys 配置完成且无 family domain | 重启             | 启动守卫不再打开 Welcome；模型选择显示发现成员                  | UI + Registry             | unit covered                      |
-| LS-06   | 手机连接 Desktop Host              | 打开 `/remote`   | 读取 Host 已有模型，不出现独立 Longsys onboarding/配置写入      | service boundary          | existing regression               |
+| Case ID | Setup                                      | Action           | Assertions                                                      | Evidence layers           | E2E status                        |
+| ------- | ------------------------------------------ | ---------------- | --------------------------------------------------------------- | ------------------------- | --------------------------------- |
+| LS-01   | 首次启动、无可执行 Provider                | 打开首页         | 只显示 Longsys Key 输入和主动作，无 OAuth/provider/URL/跳过     | UI                        | unit + E2E passed；manual pending |
+| LS-02   | `/models` 返回重复且含空 ID                | 提交有效 Key     | trim/filter/稳定去重；一个 Longsys Provider；顺序与首次返回一致 | network + repository + UI | unit covered                      |
+| LS-03   | HTTP 401/500、畸形 JSON 或空列表           | 提交 Key         | 显示脱敏错误；Provider Repository 不变；可重试                  | network + repository + UI | unit covered                      |
+| LS-04   | 已有 Longsys Provider                      | 提交另一有效 Key | 复用同 providerId，原子替换 Key 与模型成员，不新增 Provider     | repository + Registry     | unit covered                      |
+| LS-05   | Longsys 配置完成且无 family domain         | 重启             | 启动守卫不再打开 Welcome；模型选择显示发现成员                  | UI + Registry             | unit covered                      |
+| LS-06   | 手机连接 Desktop Host                      | 打开 `/remote`   | 读取 Host 已有模型，不出现独立 Longsys onboarding/配置写入      | service boundary          | existing regression               |
+| LS-07   | Registry 同时含 BigModel、Start 与 Longsys | 打开模型设置     | 不显示“智谱”、BigModel 或 Start Plan；默认选中 Longsys 详情     | UI navigation             | unit covered；E2E manual pending  |
 
 ## Pruning Decisions
 
@@ -176,6 +183,7 @@ OpenAI-compatible `/models` 标准响应并保持服务端顺序。
 | LS-P02      | 静态写死截图模型            | 模型成员来自授权 Key   | 不把目录截图当权限事实                   | LS-02                   |
 | LS-P03      | OAuth/Plan 与 Longsys 组合  | 普通首页无 OAuth 选择  | 保留后台连接流程但不进入 onboarding 矩阵 | 既有 OAuth 回归         |
 | LS-P04      | mobile 独立发现/保存        | shared-host attachment | 只有 Desktop/target Host 是配置 owner    | LS-06                   |
+| LS-P05      | 删除旧账号配置或历史引用    | 仅裁剪 Renderer 导航   | 品牌收敛不执行破坏性数据迁移             | LS-07                   |
 
 ## 验证
 

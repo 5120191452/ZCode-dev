@@ -541,7 +541,7 @@ Minimum P0 coverage:
   plugin host command only after each id is enabled.
 - Seeds default-enabled official plugins into CLI SEA, Electron desktop bundle, and remote agent resource layouts.
   Browser Use is runtime-backed and must include and validate `dist/mcp/server.js`,
-  `scripts/browser-client.mjs`, `docs/`, and both `skills/`; Document Skills, Skill Creator, and ZCode Guide
+  `scripts/browser-client.mjs`, `docs/`, and both `skills/`; Document Skills, Skill Creator, and LongsysCode Guide
   remain content-only.
 - CLI list/enable/disable preserves unrelated config.
 - CLI uninstall removes the installed record, cache directory, per-plugin data

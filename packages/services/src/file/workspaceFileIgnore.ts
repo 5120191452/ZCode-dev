@@ -77,8 +77,8 @@ const BUILTIN_IGNORE_LINES = [
 ];
 
 const TEMPLATE_HEADER = [
-  "# ZCode 工作区文件搜索忽略规则（.zcodeignore）",
-  "# 语法与 .gitignore 一致，只影响 ZCode 的 @ 文件候选 / Command Center / 文件树搜索，",
+  "# LongsysCode 工作区文件搜索忽略规则（.zcodeignore）",
+  "# 语法与 .gitignore 一致，只影响 LongsysCode 的 @ 文件候选 / Command Center / 文件树搜索，",
   "# 不影响文件树浏览、上传或 Agent 文件访问。",
   "# 修改 .gitignore 不会自动同步到本文件；可在设置页「从 .gitignore 同步」。",
   "",
@@ -93,7 +93,7 @@ const TEMPLATE_HEADER = [
 export const WORKSPACE_FILE_SEARCH_IGNORE_SYNC_MARKER =
   "# ===== ↑ 以上同步自 .gitignore（「从 .gitignore 同步」只重写以上部分）=====";
 export const WORKSPACE_FILE_SEARCH_IGNORE_DEFAULTS_MARKER =
-  "# ----- ↑ 以上为 ZCode 默认排除规则（自定义规则请写在本行下方，不会被同步/恢复改动）-----";
+  "# ----- ↑ 以上为 LongsysCode 默认排除规则（自定义规则请写在本行下方，不会被同步/恢复改动）-----";
 
 const CUSTOM_SECTION_HINT = "# 自定义规则写在下方（本行提示可删除）";
 
@@ -168,8 +168,14 @@ function splitWorkspaceFileSearchIgnoreSections(
   }
   return {
     gitignoreSection: lines.slice(0, syncIndex).join("\n"),
-    defaultsSection: lines.slice(syncIndex + 1, defaultsIndex).join("\n").trim(),
-    customSection: lines.slice(defaultsIndex + 1).join("\n").replace(/^\n+/, ""),
+    defaultsSection: lines
+      .slice(syncIndex + 1, defaultsIndex)
+      .join("\n")
+      .trim(),
+    customSection: lines
+      .slice(defaultsIndex + 1)
+      .join("\n")
+      .replace(/^\n+/, ""),
   };
 }
 
@@ -306,11 +312,7 @@ export async function loadWorkspaceFileSearchIgnoreRules(
         source: "fallback-gitignore",
       };
     }
-    logger?.warn(
-      undefined,
-      `[workspace-file-ignore] ${reason}，降级为内置默认忽略规则`,
-      error,
-    );
+    logger?.warn(undefined, `[workspace-file-ignore] ${reason}，降级为内置默认忽略规则`, error);
     const template = buildWorkspaceFileSearchIgnoreTemplate(null);
     return {
       matcher: buildIgnoreMatcher(template),
@@ -328,9 +330,9 @@ export async function loadWorkspaceFileSearchIgnoreRules(
     return { matcher: buildIgnoreMatcher(existing), source: "file" };
   }
 
-  const gitignoreContent = await readOptionalFile(
-    resolve(rootPath, GITIGNORE_FILE_NAME),
-  ).catch(() => null);
+  const gitignoreContent = await readOptionalFile(resolve(rootPath, GITIGNORE_FILE_NAME)).catch(
+    () => null,
+  );
   const initialContent = buildWorkspaceFileSearchIgnoreTemplate(gitignoreContent);
   // 管理入口已临时隐藏，但自动创建逻辑仍会往用户项目写文件，因此先注释停用。
   // 保留原创建和日志逻辑，后续恢复入口时可重新启用；当前只在内存中使用规则。
@@ -389,9 +391,9 @@ export async function readWorkspaceFileSearchIgnore(
   if (existing !== null) {
     return { content: existing, source: "file" };
   }
-  const gitignoreContent = await readOptionalFile(
-    resolve(rootPath, GITIGNORE_FILE_NAME),
-  ).catch(() => null);
+  const gitignoreContent = await readOptionalFile(resolve(rootPath, GITIGNORE_FILE_NAME)).catch(
+    () => null,
+  );
   return {
     content: buildWorkspaceFileSearchIgnoreTemplate(gitignoreContent),
     source: "template",
@@ -411,9 +413,9 @@ export async function transformWorkspaceFileSearchIgnore(
 ): Promise<{ content: string }> {
   const ignorePath = resolve(rootPath, WORKSPACE_FILE_SEARCH_IGNORE_FILE_NAME);
   const existing = await readOptionalFile(ignorePath).catch(() => null);
-  const gitignoreContent = await readOptionalFile(
-    resolve(rootPath, GITIGNORE_FILE_NAME),
-  ).catch(() => null);
+  const gitignoreContent = await readOptionalFile(resolve(rootPath, GITIGNORE_FILE_NAME)).catch(
+    () => null,
+  );
   const currentContent = existing ?? buildWorkspaceFileSearchIgnoreTemplate(gitignoreContent);
   const content =
     transform === "sync-gitignore"
