@@ -543,7 +543,7 @@ nodes:
     label: "Single-source LongsysCode product brand"
     aliases:
       ["产品 Logo", "产品名称", "应用图标", "App icon", "favicon", "brand-logo", "LongsysCode"]
-    docs: ["docs/branding/product-logo-assets.md"]
+    docs: ["docs/branding/product-logo-assets.md", "docs/branding/desktop-product-identity.md"]
     codeSeeds:
       - symbol: "ZCodeAboutLogo"
         file: "packages/ui/src/components/ui/ZCodeAboutLogo.tsx"
@@ -552,10 +552,16 @@ nodes:
       - file: "packages/ui/src/i18n/locales/zh-CN.ts"
       - file: "apps/zcode-cli/packages/bootstrap/src/app/official-plugin-definitions.ts"
       - file: "scripts/generate-product-logo-assets.mjs"
+      - symbol: "resolveDesktopProductIdentity"
+        file: "packages/desktop/scripts/desktop-product-identity.mjs"
+      - file: "packages/desktop/src/main/desktopRuntimeEnv.ts"
+      - file: "packages/desktop/scripts/bundle.mjs"
     invariants:
       - "public/logo/brand-logo.png is the only product-logo master; checked-in PNG, ICO, ICNS and inline favicon outputs are deterministic derivatives."
       - "Desktop packaging, Web favicon and first-party Renderer branding share the master without recoloring, redrawing or adding a legacy dark icon shell."
-      - "User-visible product copy uses LongsysCode, while ZCode-prefixed symbols, package names, protocol headers, storage paths and persisted compatibility identities remain unchanged."
+      - "User-visible product copy, desktop installers and main application processes use LongsysCode; ZCode-prefixed symbols, app ids, Linux package ids, protocol headers, storage paths and persisted compatibility identities remain unchanged."
+      - "Production and Preview main applications are LongsysCode and LongsysCode Preview; their historical ZCode Electron data directories remain the persistence projection."
+      - "Cross-building a Windows installer on Linux or macOS requires Wine and fails before prepare/build when neither wine nor wine64 is available; dry-run stays side-effect free."
       - "The unauthenticated model entry says 重新认证模型 / Re-authenticate models without changing the existing authentication action."
       - "Provider, model, payment, channel, file-type, plugin and guest-page icons remain separately owned and must not inherit product branding."
 
@@ -568,6 +574,17 @@ nodes:
       - file: "packages/desktop/build/icon.png"
       - file: "packages/web/public/favicon.ico"
       - file: "packages/android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml"
+
+  - id: "state.desktop-product-identity"
+    kind: "state"
+    label: "LongsysCode desktop installer, executable and runtime identity"
+    docs: ["docs/branding/desktop-product-identity.md"]
+    codeSeeds:
+      - symbol: "resolveDesktopProductIdentity"
+        file: "packages/desktop/scripts/desktop-product-identity.mjs"
+      - file: "packages/desktop/electron-builder.config.js"
+      - file: "packages/desktop/src/main/desktopRuntimeEnv.ts"
+      - file: "packages/desktop/scripts/bundle.mjs"
 
   - id: "surface.product-brand-logo"
     kind: "ui-surface"
@@ -6775,6 +6792,10 @@ edges:
   - from: "state.product-brand-logo-assets"
     to: "surface.product-brand-logo"
     type: "projects-to"
+    rank: "must-inspect"
+  - from: "capability.product-brand-logo"
+    to: "state.desktop-product-identity"
+    type: "owns-visible-desktop-identity"
     rank: "must-inspect"
   - from: "capability.product-brand-logo"
     to: "capability.provider-templates"

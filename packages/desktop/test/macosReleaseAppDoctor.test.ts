@@ -52,7 +52,7 @@ fi
   );
 }
 
-function createReleaseApp(rootDir: string, productName = "ZCode") {
+function createReleaseApp(rootDir: string, productName = "LongsysCode") {
   const appPath = join(rootDir, `${productName}.app`);
 
   writeExecutable(join(appPath, "Contents", "MacOS", productName), "#!/bin/bash\n");
@@ -105,7 +105,7 @@ describe.skipIf(isWindows)("doctor-macos-release-app.sh", () => {
     const workspaceDir = makeTempDir("zcode-macos-preview-doctor-");
     const binDir = join(workspaceDir, "bin");
     const toolLog = join(workspaceDir, "tool.log");
-    const { appPath } = createReleaseApp(workspaceDir, "ZCode Preview");
+    const { appPath } = createReleaseApp(workspaceDir, "LongsysCode Preview");
     const zcodeHome = join(workspaceDir, ".zcode");
     const helperAppPath = createZcodeHomeHelper(zcodeHome, "preview");
 
@@ -120,13 +120,13 @@ describe.skipIf(isWindows)("doctor-macos-release-app.sh", () => {
       ZCODE_HOME: zcodeHome,
     });
 
-    expect(output).toContain(`validating ZCode Preview.app: ${appPath}`);
+    expect(output).toContain(`validating LongsysCode Preview.app: ${appPath}`);
     const log = readFileSync(toolLog, "utf-8");
     expect(log).toContain(`codesign\t--verify\t--deep\t--strict\t${appPath}`);
     expect(log).toContain(`codesign\t--verify\t--deep\t--strict\t${helperAppPath}`);
   });
 
-  it("默认只验收安装后的 ZCode.app，不强绑 Computer Use Helper 发布", () => {
+  it("默认只验收安装后的 LongsysCode.app，不强绑 Computer Use Helper 发布", () => {
     const workspaceDir = makeTempDir("zcode-macos-release-doctor-");
     const binDir = join(workspaceDir, "bin");
     const toolLog = join(workspaceDir, "tool.log");

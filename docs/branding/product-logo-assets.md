@@ -17,9 +17,11 @@
   `app.login` 与 `sidebar.profile.notLoggedIn` 必须保持一致，并继续复用原有认证行为。
 - About、帮助菜单、托盘、打开目录菜单、更新提示、Computer Use、会话分享、Web Remote Control、
   内置插件说明及“LongsysCode 使用指南”等用户可见文案统一使用 `LongsysCode`。
-- 本次只修改展示投影，不迁移技术身份。`ZCode*` TypeScript/Kotlin 符号、`@zcode/*` 包名、
-  `.zcode` 数据目录、`zcode://` 协议、`X-ZCode-*` HTTP 头、配置键、遥测字段、注册表键及兼容性错误匹配保持不变。
-- Electron 的安装身份、数据目录选择和旧版迁移标记保持兼容；不得因展示名称替换而创建新的用户数据目录，
+- Desktop 安装包和主应用进程的可见名称按
+  [`desktop-product-identity.md`](./desktop-product-identity.md) 迁移为 `LongsysCode`；`ZCode*`
+  TypeScript/Kotlin 符号、`@zcode/*` 包名、`.zcode` 数据目录、`zcode://` 协议、`X-ZCode-*`
+  HTTP 头、配置键、遥测字段、注册表键及兼容性错误匹配保持不变。
+- Electron 的 appId、数据目录选择和旧版迁移标记保持兼容；产品名替换不得创建新的用户数据目录，
   也不得重写已持久化 Provider、模型或会话数据。
 
 ## 资产所有者与派生关系
@@ -74,7 +76,8 @@ public/logo/brand-logo.png
 | Renderer 共享 UI   | 登录、引导、空态、更新、Highspeed         | 不得保留旧内联 Z SVG       |
 | Provider 品牌      | Z.AI Provider Logo                        | 是隔离边界，必须保持不变   |
 
-这是静态展示资产替换，不改变 Renderer 状态、Host/Agent 生命周期、任务流、workspace identity、远控传输或任何持久化数据。
+品牌资产本身是静态展示投影；Desktop 安装/进程名称的后续迁移单独遵守安装身份规范，不改变
+Renderer 状态、Host/Agent 生命周期、任务流、workspace identity、远控传输或任何持久化数据。
 
 本次影响扫描以 `capability.product-brand-logo` 为起点；当前环境没有 codegraph，因此使用精确文本扫描、
 现有菜单/About/内置指南单测和 Desktop E2E 用例核对直接消费者。状态所有者与提交路径均无变化：本地化

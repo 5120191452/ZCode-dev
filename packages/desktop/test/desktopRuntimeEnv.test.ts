@@ -264,6 +264,7 @@ describe("desktopRuntimeEnv resolveRemoteAssetDirs", () => {
   beforeEach(() => {
     vi.resetModules();
     appMock.isPackaged = false;
+    productFlavorMock.value = "preview";
     appMock.getPath.mockImplementation((name: string) => `/mock/${name}`);
     delete process.env["ZCODE_DEV_REMOTE_ASSET_USE_CDN"];
     delete process.env["ZCODE_REMOTE_ASSET_CDN_BASE_URL"];
@@ -965,7 +966,16 @@ describe("desktopRuntimeEnv runtime identity", () => {
     expect(runtimeSessionDataPath).toBe("/tmp/zcode-e2e/session-data");
   });
 
-  it("打包测试环境使用 Preview 应用名和独立 Electron 数据目录", async () => {
+  it("本地开发进程使用 LongsysCode 名称但继续读取历史 Electron 数据目录", async () => {
+    const { runtimeApplicationName, runtimeSessionDataPath, runtimeUserDataPath } =
+      await import("../src/main/desktopRuntimeEnv.js");
+
+    expect(runtimeApplicationName).toBe("LongsysCode Dev");
+    expect(runtimeUserDataPath).toBe(join("/mock/appData", "ZCode Dev"));
+    expect(runtimeSessionDataPath).toBe(join("/mock/appData", "ZCode Dev", "session"));
+  });
+
+  it("打包测试环境使用 LongsysCode Preview 应用名和历史 Electron 数据目录", async () => {
     appMock.isPackaged = true;
 
     const {
@@ -976,13 +986,30 @@ describe("desktopRuntimeEnv runtime identity", () => {
     } = await import("../src/main/desktopRuntimeEnv.js");
 
     expect(isPreviewPackagedRuntime).toBe(true);
-    expect(runtimeApplicationName).toBe("ZCode Preview");
+    expect(runtimeApplicationName).toBe("LongsysCode Preview");
     // Bugfix：这两条路径由实现用宿主 path.join 从 app.getPath("appData") 拼出，
     // Windows 上是 `\mock\appData\ZCode Preview`，写死 POSIX 字面量必然失败。
     // 用例要断言的是「Preview 单独占一个 Electron 数据目录」的目录结构，与分隔符无关，
     // 所以用同样的 join 表达；在 POSIX 上是恒等变换。
     expect(runtimeUserDataPath).toBe(join("/mock/appData", "ZCode Preview"));
     expect(runtimeSessionDataPath).toBe(join("/mock/appData", "ZCode Preview", "session"));
+  });
+
+  it("打包正式环境使用 LongsysCode 应用名并继续读取 ZCode 数据目录", async () => {
+    appMock.isPackaged = true;
+    productFlavorMock.value = "production";
+
+    const {
+      isPreviewPackagedRuntime,
+      runtimeApplicationName,
+      runtimeSessionDataPath,
+      runtimeUserDataPath,
+    } = await import("../src/main/desktopRuntimeEnv.js");
+
+    expect(isPreviewPackagedRuntime).toBe(false);
+    expect(runtimeApplicationName).toBe("LongsysCode");
+    expect(runtimeUserDataPath).toBe(join("/mock/appData", "ZCode"));
+    expect(runtimeSessionDataPath).toBe(join("/mock/appData", "ZCode", "session"));
   });
 
   it("e2e 可保留 Chromedriver 注入的 Electron userData 目录", async () => {

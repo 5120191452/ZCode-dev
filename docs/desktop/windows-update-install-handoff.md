@@ -20,7 +20,7 @@ update-downloaded
   -> electron-updater.quitAndInstall()
   -> NSIS CHECK_APP_RUNNING 做最终安装目录进程检查
   -> NSIS 覆盖安装并保留已有快捷方式身份
-  -> 完成页直接启动新安装目录下的 ZCode.exe
+  -> 完成页直接启动新安装目录下的 LongsysCode.exe
 ```
 
 Main 进程不能在调用 `quitAndInstall()` 前按整个安装目录杀进程，因为 renderer、GPU
@@ -69,6 +69,7 @@ Main 进程不能在调用 `quitAndInstall()` 前按整个安装目录杀进程�
     -> 保留原 .lnk / 固定身份
     -> 若继承的目标失效，则原位修复 .lnk
   ```
+
 - 覆盖更新时，开始菜单和桌面快捷方式先由 electron-builder 的 `KeepShortcuts` 机制保留。
   ZCode 的 `customInstall` 必须读取已有 `.lnk` 的目标：目标已经等于本次 `$appExe` 时原样保留，
   不得再次调用 `CreateShortCut`；目标不同、为空或无法读取时才原位修复为 `$appExe`。修复原因
@@ -79,7 +80,7 @@ Main 进程不能在调用 `quitAndInstall()` 前按整个安装目录杀进程�
 - 快捷方式名称或菜单目录确需迁移时，继续由 electron-builder 内建流程执行重命名、AUMID
   写入与 `SHChangeNotify`；不得在其通知 Shell 之后再静默修改 `.lnk`。
 - assisted installer 完成页不得依赖可能由旧版本保留下来的 `.lnk`，必须直接启动
-  `$INSTDIR\ZCode.exe`。
+  `$INSTDIR\LongsysCode.exe`。
 - `config.json.lock` 属于服务层跨进程原子写锁，不属于 Electron 更新器。等待者自身的等待
   时长只能决定何时返回超时，不能作为当前锁 stale 的证据；PID 仍存活的 owner 不允许被
   运行期等待者强制接管，正常并发写入必须保持串行。

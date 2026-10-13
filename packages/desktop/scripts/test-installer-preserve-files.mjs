@@ -76,7 +76,7 @@ if (process.platform !== "win32") {
       if (!existsSync(join(installDir, "user-data.txt"))) {
         throw new Error(`${scenario}: unrelated file was removed`);
       }
-      if (readFileSync(join(installDir, "ZCode.exe")).length === 0) {
+      if (readFileSync(join(installDir, "LongsysCode.exe")).length === 0) {
         throw new Error(`${scenario}: application payload was not installed`);
       }
     }

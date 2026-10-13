@@ -42,9 +42,9 @@ renderer、host/service 和 agent 里的 ZCode API、远控链接、zcode-plan O
 
 默认域名矩阵：
 
-| 产品环境 | ZCode API | ZAI OAuth | ZAI Business API | BigModel API |
-| --- | --- | --- | --- | --- |
-| `test` | `https://zcode.z.ai` | `https://chat.z.ai` | `https://api.z.ai` | `https://bigmodel.cn` |
+| 产品环境     | ZCode API            | ZAI OAuth           | ZAI Business API   | BigModel API          |
+| ------------ | -------------------- | ------------------- | ------------------ | --------------------- |
+| `test`       | `https://zcode.z.ai` | `https://chat.z.ai` | `https://api.z.ai` | `https://bigmodel.cn` |
 | `production` | `https://zcode.z.ai` | `https://chat.z.ai` | `https://api.z.ai` | `https://bigmodel.cn` |
 
 覆盖优先级：
@@ -71,7 +71,7 @@ renderer、host/service 和 agent 里的 ZCode API、远控链接、zcode-plan O
 
 ## 安装包命名
 
-正式环境安装包保持原有文件名，例如 `ZCode-3.0.0-mac-x64.dmg`。
-测试环境安装包在架构后追加 `_TEST`，例如 `ZCode-3.0.0-mac-x64_TEST.dmg`。
+正式环境安装包使用 LongsysCode 产品名，例如 `LongsysCode-3.0.0-mac-x64.dmg`。
+测试环境安装包在架构后追加 `_TEST`，例如 `LongsysCode Preview-3.0.0-mac-x64_TEST.dmg`。
 同一规则适用于 macOS、Windows、Linux 产物，避免测试包与正式包在下载、上传或人工验收时混淆。
 构建产物飞书通知会显示“测试环境/正式环境”标识；release 发布通知只用于正式发布。

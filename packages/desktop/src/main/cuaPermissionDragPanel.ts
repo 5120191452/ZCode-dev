@@ -4,7 +4,7 @@
  * 这个窗口有四个不可妥协的性质，全部来自实测：
  *
  * 1. **不能激活自己所属的 app**（`type: "panel"` + `focusable: false`，两者缺一不可）。它浮在
- *    「系统设置」之上，用户要在它和设置页之间拖拽。只设 focusable 时点击仍会激活 ZCode.app，
+ *    「系统设置」之上，用户要在它和设置页之间拖拽。只设 focusable 时点击仍会激活 LongsysCode.app，
  *    焦点跳到主窗，引导流程当场断掉 —— 详见 `createRealCuaPermissionPanelWindow` 的注释。
  * 2. **必须压过系统设置**（`alwaysOnTop(true, "screen-saver")`）。普通 `floating` 层级在设置页
  *    激活时会被盖住。

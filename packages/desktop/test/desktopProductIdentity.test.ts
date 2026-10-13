@@ -26,8 +26,8 @@ describe("desktop product identity", () => {
     expect(resolveDesktopProductIdentity({ ZCODE_ENV: "test" })).toEqual({
       flavor: "preview",
       appId: "dev.zcode.app.preview",
-      productName: "ZCode Preview",
-      linuxExecutableName: "zcode-preview",
+      productName: "LongsysCode Preview",
+      linuxExecutableName: "longsyscode-preview",
       linuxPackageName: "zcode-preview",
       cuaHelperInstallVariant: "preview",
     });
@@ -56,7 +56,7 @@ describe("desktop product identity", () => {
     }
   });
 
-  it("测试后端永远是 Preview 身份，开关无法把它变成正式 ZCode", () => {
+  it("测试后端永远是 Preview 身份，开关无法把它变成正式 LongsysCode", () => {
     expect(resolveDesktopProductFlavor({ ZCODE_ENV: "test", ZCODE_PREVIEW_IDENTITY: "0" })).toBe(
       "preview",
     );
@@ -74,18 +74,27 @@ describe("desktop product identity", () => {
     expect(resolveDesktopArtifactSuffix({})).toBe("_TEST");
   });
 
-  it("ZCODE_ENV=production 完整保留正式包身份", () => {
+  it("ZCODE_ENV=production 使用 LongsysCode 正式安装与进程身份", () => {
     expect(resolveDesktopProductIdentity({ ZCODE_ENV: "production" })).toBe(
       desktopProductIdentities.production,
     );
     expect(desktopProductIdentities.production).toEqual({
       flavor: "production",
       appId: "dev.zcode.app",
-      productName: "ZCode",
-      linuxExecutableName: "zcode",
+      productName: "LongsysCode",
+      linuxExecutableName: "longsyscode",
       linuxPackageName: "zcode",
       cuaHelperInstallVariant: null,
     });
+  });
+
+  it("desktop package metadata 不再回退到旧主进程名", () => {
+    const desktopPackage = JSON.parse(
+      readFileSync(resolve(import.meta.dirname, "../package.json"), "utf8"),
+    );
+    expect(desktopPackage.productName).toBe("LongsysCode");
+    expect(desktopPackage.description).toBe("LongsysCode Desktop App");
+    expect(desktopPackage.author).toBe("LongsysCode");
   });
 
   it("未注入或未知环境时不应误生成正式安装身份", () => {

@@ -497,12 +497,12 @@ describe("appARMSBootstrap beforeReport", () => {
   it.each([
     {
       runtime: "Linux Preview",
-      applicationName: "ZCode Preview",
-      executableName: "zcode-preview",
+      applicationName: "LongsysCode Preview",
+      executableName: "longsyscode-preview",
     },
     {
       runtime: "local development",
-      applicationName: "ZCode Dev",
+      applicationName: "LongsysCode Dev",
       executableName: "Electron",
     },
   ])(

@@ -4,7 +4,7 @@
 // 该脚本聚合了打包入口、重试策略、计时与产物校验逻辑，短期内拆文件会影响 CI 稳定性。
 // 先保留集中实现，后续再按“参数解析/构建执行/产物校验”拆分模块。
 
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { readdirSync, statSync } from "node:fs";
 import { existsSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -84,6 +84,32 @@ const artifactArchHintsByArch = {
   x64: ["x64", "x86_64", "amd64"],
   arm64: ["arm64", "aarch64"],
 };
+
+function isCommandAvailable(command) {
+  const result = spawnSync(command, ["--version"], { stdio: "ignore" });
+  return result.status === 0 && !result.error;
+}
+
+export function assertPackagingHostPrerequisites({
+  targetOs,
+  hostPlatform = process.platform,
+  dryRun = false,
+  commandAvailable = isCommandAvailable,
+}) {
+  if (dryRun || targetOs !== "win" || hostPlatform === "win32") {
+    return;
+  }
+
+  if (commandAvailable("wine") || commandAvailable("wine64")) {
+    return;
+  }
+
+  throw new Error(
+    "Windows cross-build requires Wine to modify Electron executables. " +
+      "On Ubuntu install it with `sudo apt install wine64`, then rerun the bundle command; " +
+      "or build on a Windows x64 runner/VM.",
+  );
+}
 const commandStdoutMaxBuffer = 64 * 1024 * 1024;
 const requiredRuntimeModules = [
   "module-details-from-path",
@@ -267,6 +293,9 @@ function printHelp() {
 环境变量:
   ZCODE_TARGET_OS              与 --os 等价
   ZCODE_TARGET_ARCH            与 --arch 等价
+
+宿主要求:
+  Linux/macOS 交叉打包 Windows 安装包需要 Wine；Windows 原生构建不需要。
 `);
 }
 
@@ -731,6 +760,8 @@ async function main() {
     console.log(`[bundle] dry-run: ${pnpmCommand} ${buildArgs.join(" ")}`);
     process.exit(0);
   }
+
+  assertPackagingHostPrerequisites({ targetOs: os });
 
   if (!skipPrepare) {
     run(pnpmCommand, ["prepare:runtime-assets"], buildEnv);

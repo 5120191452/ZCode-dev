@@ -56,8 +56,8 @@ Var keepShortcuts
 
 Section
   SetOutPath "$INSTDIR"
-  File /oname=ZCode.exe "${FIXTURE_EXE}"
-  StrCpy $appExe "$INSTDIR\ZCode.exe"
+  File /oname=LongsysCode.exe "${FIXTURE_EXE}"
+  StrCpy $appExe "$INSTDIR\LongsysCode.exe"
   StrCpy $launchLink "$INSTDIR\stale-target.exe"
   StrCpy $newStartMenuLink "$INSTDIR\start-menu.lnk"
   StrCpy $newDesktopLink "$INSTDIR\desktop.lnk"

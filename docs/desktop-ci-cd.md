@@ -52,13 +52,13 @@ Linux 桌面构建与 `notify:feishu:linux:*` 已启用；正式 tag 的 macOS�
 | `build:preview`                              | 手动、optional | 启动同一 MR commit 的 Preview child pipeline；不继承 parent 默认变量，只显式传递 Preview 控制变量，固定 `ZCODE_ENV=test`，不阻塞 production 验收包 DAG |
 | `test:e2e:conversation-session:auto`         | 手动、optional | 在共享 `macos + e2e` Runner 上单 job 执行正式 conversation/plugin/workspace-file-tree replay 集合                                                      |
 | `test:e2e:conversation-session:auto:windows` | 手动、optional | 生成四个 WDIO 原生 shard，调度到 `windows-e2e + e2e` Runner 池                                                                                         |
-| `test:e2e:conversation-session:auto:mac`     | 手动、optional | 只生成一个 job，并调度到专用标签的 darwin/arm64 Runner                                                                            |
+| `test:e2e:conversation-session:auto:mac`     | 手动、optional | 只生成一个 job，并调度到专用标签的 darwin/arm64 Runner                                                                                                 |
 
 ## 发布链路修改前后对比
 
 | 环节                  | 修改前                                                                                      | 修改后                                                                                                        |
 | --------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| update metadata       | 构建与日志注入发生在同一阶段，修改日志可能要求重新打包                                      | 构建只产出基础 `latest.yml`，infra 在共享目录编辑日志，approve 后由 validate 校验，不生成独立 locale 文件    |
+| update metadata       | 构建与日志注入发生在同一阶段，修改日志可能要求重新打包                                      | 构建只产出基础 `latest.yml`，infra 在共享目录编辑日志，approve 后由 validate 校验，不生成独立 locale 文件     |
 | `upload`              | 上传版本化产物时会一并覆盖 stable feed，客户端可能在后端 release API 前看到新 `latest*.yml` | 只上传版本化产物和 remote components，只产出 `release-meta-*.json` 与版本化预热 URL，不覆盖 stable feed       |
 | `release:preload:cdn` | upload 后预热版本化产物，后续发布 job 需要等待它完成                                        | 独立 `preload` stage；approve 放行并 upload 成功后自动预热版本化平台/架构产物，必须成功后才允许 publish       |
 | `release:publish:*`   | 非手动或可能跟随前置阶段自动进入；stable feed 覆盖职责不明确                                | 灰度和全量阶段都只调用后端 release API，stable / preview 可见性由服务端 manifest 控制，不再上传 stable feed   |
@@ -129,17 +129,17 @@ glab ci list --ref "${CI_BRANCH}" --sha "$(git rev-parse HEAD)"
 
 `build:macos:<arch>` 通过 `needs`（`optional`）依赖同架构的 `build:cua-helper:<arch>` artifact。strict
 release 的产物验收（`scripts/notarize-macos.sh` → `doctor-macos-release-app.sh`，`ZCODE_CUA_REQUIRE_HELPER=1`）
-会定位最终 `ZCode.app/Contents/Resources/cua-helper/ZCode Computer Use.app` 并设
+会定位最终 `LongsysCode.app/Contents/Resources/cua-helper/ZCode Computer Use.app` 并设
 `ZCODE_CUA_HELPER_APP_PATH`，因此校验的是实际随 DMG 交付的内嵌副本，而不是中间 artifact 或 runner 上
 `${ZCODE_HOME:-$HOME/.zcode}` 的残留状态。包内 Helper 缺失会 fail-closed。
 
 成功后固定下载入口如下，其中 `<slug>` 是 GitLab 的 `$CI_COMMIT_REF_SLUG`：
 
 ```text
-http://intranet.example.invalid:12345/zcode/@electron/ci/<slug>/macos-arm64/ZCode-<version>-mac-arm64.dmg
-http://intranet.example.invalid:12345/zcode/@electron/ci/<slug>/macos-arm64/ZCode-<version>-mac-arm64.zip
-http://intranet.example.invalid:12345/zcode/@electron/ci/<slug>/macos-x64/ZCode-<version>-mac-x64.dmg
-http://intranet.example.invalid:12345/zcode/@electron/ci/<slug>/macos-x64/ZCode-<version>-mac-x64.zip
+http://intranet.example.invalid:12345/zcode/@electron/ci/<slug>/macos-arm64/LongsysCode-<version>-mac-arm64.dmg
+http://intranet.example.invalid:12345/zcode/@electron/ci/<slug>/macos-arm64/LongsysCode-<version>-mac-arm64.zip
+http://intranet.example.invalid:12345/zcode/@electron/ci/<slug>/macos-x64/LongsysCode-<version>-mac-x64.dmg
+http://intranet.example.invalid:12345/zcode/@electron/ci/<slug>/macos-x64/LongsysCode-<version>-mac-x64.zip
 
 http://intranet.example.invalid:12345/zcode/@electron/ci/<slug>/pipeline-<pipeline-id>/cua-helper-macos-arm64/ZCode-CUA-Helper-<version>-mac-arm64.zip
 http://intranet.example.invalid:12345/zcode/@electron/ci/<slug>/pipeline-<pipeline-id>/cua-helper-macos-x64/ZCode-CUA-Helper-<version>-mac-x64.zip
@@ -159,7 +159,7 @@ http://intranet.example.invalid:12345/zcode/deps/zcode-cua-helper-<version>/ZCod
 Record SHA-256 for every package that will be handed to testers:
 
 ```bash
-shasum -a 256 ZCode-<version>-mac-arm64.zip \
+shasum -a 256 LongsysCode-<version>-mac-arm64.zip \
   ZCode-CUA-Helper-<version>-mac-arm64.zip
 ```
 
@@ -175,7 +175,7 @@ glab api 'projects/:fullpath/jobs/<helper-job-id>/trace' \
 
 For release-quality CUA validation, do not stop at package production. Install the
 standalone Helper under `${ZCODE_HOME:-$HOME/.zcode}/computer-use/ZCode Computer Use.app`,
-launch the matching ZCode.app, and run the zcode-cua consumer gates. Product broker
+launch the matching LongsysCode.app, and run the zcode-cua consumer gates. Product broker
 sockets are minted as random `broker-<hex>.sock` files; do not hard-code
 `broker.sock` in new validation scripts.
 
@@ -218,7 +218,7 @@ sockets are minted as random `broker-<hex>.sock` files; do not hard-code
 
 ## Linux 安装包格式与 glibc 基线
 
-Linux 打包产出 `AppImage`、`deb`、`rpm` 三种安装包，x64 / arm64 双架构。`deb` 与 `rpm` 的 packageName 均按 flavor 拆分（`zcode` / `zcode-preview`），避免系统包管理器把另一 flavor 的安装当成升级替换。`latest.yml` 与 electron-updater 在 Linux 上固定以 AppImage 作为更新产物，`deb` / `rpm` 只做首次安装分发，不参与自更新；`upload-oss.sh` 解析更新元数据时也强制校验更新产物必须是 AppImage。
+Linux 打包产出 `AppImage`、`deb`、`rpm` 三种安装包，x64 / arm64 双架构。`deb` 与 `rpm` 的兼容 packageName 继续按 flavor 拆分（`zcode` / `zcode-preview`），避免系统包管理器把另一 flavor 的安装当成升级替换，同时允许 LongsysCode 品牌版本覆盖升级旧安装。`latest.yml` 与 electron-updater 在 Linux 上固定以 AppImage 作为更新产物，`deb` / `rpm` 只做首次安装分发，不参与自更新；`upload-oss.sh` 解析更新元数据时也强制校验更新产物必须是 AppImage。
 
 rpm 面向 RHEL 8+（glibc 2.28）基线。整包 glibc 下限按 ELF `GLIBC_*` symbol version 实测：随包 node-pty prebuild 与 `bfs` / `ugrep` 为 2.28，Electron 41 主二进制为 2.25，`rg` 为 musl 静态无 glibc 依赖，整体 floor = 2.28；Ubuntu 20.04+、Debian 10+、RHEL 8+/9 均满足，CentOS 7、Ubuntu 18.04、Amazon Linux 2 不在支持范围。rpm 产物文件名复用统一 `artifactName` 模板，electron-builder 对 rpm/deb 使用包管理器架构名（`x86_64` / `amd64` / `aarch64`）落盘，Preview flavor 带 `_TEST` 后缀；`ci-collect-artifacts` 收集阶段统一归一化为 `-linux-x64` / `-linux-arm64` 命名（扩展名无关，`.rpm` 同样生效），`upload-oss.sh` 按归一化名收集，其扩展名 pattern 均已包含 `.rpm`。
 
@@ -282,5 +282,5 @@ rpm Requires 在 electron-builder 默认集（gtk3、nss、libnotify、libXScrnS
 - 如果 `build:remote:assets` 失败，优先检查 `packages/desktop/mock-cdn/releases/<version>/` 下是否存在 `node/<platform-arch>`，以及 runner 对上游二进制下载源的网络访问
 - 如果 macOS 公证失败，先确认 `APPLE_*` 三个变量是否完整，以及 runner 上是否能执行 `xcrun notarytool`
 - 如果 upload 阶段报错缺少更新元数据，优先检查共享目录里是否存在对应平台目录下的 `latest.yml`
-- 如果某个平台没有产物，优先检查 `packages/desktop/dist` 下文件名是否仍符合 `ZCode-{version}-{os}-{arch}` 约定
+- 如果某个平台没有产物，优先检查 `packages/desktop/dist` 下文件名是否仍符合 `LongsysCode-{version}-{os}-{arch}` 约定
 - 如果共享目录里缺少文件，先确认 build job 的 `CI_ARTIFACT_OUTPUT_DIR` 是否指向 runner 实际挂载的共享路径

@@ -27,8 +27,9 @@ AppImage deb     rpm     pacman (.pkg.tar.zst)
 
 ## 包契约
 
-- 文件名沿用现有命名：`ZCode-<version>-linux-<arch>.pkg.tar.zst`。
-- package name 与 deb/rpm 使用相同的 flavor 隔离名称，避免 Preview/Production 互相覆盖。
+- 文件名使用产品身份：`LongsysCode-<version>-linux-<arch>.pkg.tar.zst`。
+- 内部 package name 与 deb/rpm 继续使用兼容 flavor id `zcode` / `zcode-preview`，避免
+  Preview/Production 互相覆盖，并允许品牌版本覆盖升级旧安装。
 - pacman 依赖由配置中的 Arch 官方仓库运行时依赖列表生成（gtk3、nss、libxss、libxtst、libnotify、alsa-lib、mesa、xdg-utils）；计划在 Arch x64/arm64 上执行安装、启动、卸载 smoke test。
 - `.pkg.tar.zst` 进入 CI artifact manifest、OSS 上传和 release metadata，但不替代 AppImage 更新路径。
 

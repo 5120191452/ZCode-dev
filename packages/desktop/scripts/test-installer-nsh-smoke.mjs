@@ -169,7 +169,7 @@ async function main() {
       runFixture(installerPath, installDir, customLogPath);
       assertInstallerLog(customLogPath ?? join(tempRoot, `${scenario}-default.log`), "silent");
 
-      const appExe = join(installDir, "ZCode.exe");
+      const appExe = join(installDir, "LongsysCode.exe");
       const startMenuLink = join(installDir, "start-menu.lnk");
       const desktopLink = join(installDir, "desktop.lnk");
       const launchLink = readFileSync(join(installDir, "launch-link.txt"), "utf-8");

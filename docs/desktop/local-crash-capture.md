@@ -19,7 +19,7 @@ Linux/Windows 共用 executable 的 helper/utility crash loop 污染产品稳定
 事件里的 `meta.process` 仅是应用名，不能作为进程角色回退；缺失或无法解析角色时必须保持
 `native_dump_unattributed`。
 可信可执行文件名同时取产品应用名与 `basename(process.execPath)`：生产包通常两者相同；
-本地开发运行实际使用 `Electron`，Linux Preview 则使用 `zcode-preview`，不能只拿
+本地开发运行实际使用 `Electron`，Linux Preview 则使用 `longsyscode-preview`，不能只拿
 `app.getName()` 与 dump 模块名比较。
 本地 `archive` 仍保留原始文件，过滤线上指标不会改变本地诊断链路。
 

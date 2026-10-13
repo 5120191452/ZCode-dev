@@ -2,7 +2,7 @@
 
 ## 背景
 
-ZCode Computer Use Helper 必须作为独立 `.app` 运行，才能成为 macOS TCC 的独立责任进程。发布包把已签名 Helper 携带在 `ZCode.app/Contents/Resources/cua-helper/` 中；运行时先校验并复制到稳定的用户级路径，再通过 LaunchServices 拉起。它不是 Electron 子进程，也不使用 `Contents/Library/Helpers`。
+ZCode Computer Use Helper 必须作为独立 `.app` 运行，才能成为 macOS TCC 的独立责任进程。发布包把已签名 Helper 携带在 `LongsysCode.app/Contents/Resources/cua-helper/` 中；运行时先校验并复制到稳定的用户级路径，再通过 LaunchServices 拉起。它不是 Electron 子进程，也不使用 `Contents/Library/Helpers`。
 
 产品安装位置固定为：
 
@@ -10,7 +10,7 @@ ZCode Computer Use Helper 必须作为独立 `.app` 运行，才能成为 macOS 
 ${ZCODE_HOME:-$HOME/.zcode}/computer-use/ZCode Computer Use.app
 ```
 
-内部 `ZCode Preview` 与生产版共享 `ZCODE_HOME` 里的任务、配置和凭据，但使用独立的 Helper
+内部 `LongsysCode Preview` 与生产版共享 `ZCODE_HOME` 里的任务、配置和凭据，但使用独立的 Helper
 版本目录，避免两个不同 App 版本依次使用 CUA 时互相覆盖或触发降级保护：
 
 ```text
@@ -23,7 +23,7 @@ Accessibility / Screen Recording 的授权主体仍显示为同一个 `ZCode Com
 
 ## 安装来源
 
-正式产品只有一个安装来源：当前 ZCode.app 内的
+正式产品只有一个安装来源：当前 LongsysCode.app 内的
 `Contents/Resources/cua-helper/ZCode Computer Use.app`。缺失、无效或无法读取时直接
 fail-closed；产品代码不会尝试网络下载，也没有下载兜底。因此构建与签名门禁必须保证这个
 arm64 Helper 与主 App 一起交付。
@@ -71,7 +71,7 @@ LaunchServices 启动外置 Helper，并把随机 socket/token 注入给可信 s
 `ZCODE_CUA_BUNDLED_HELPER_APP_PATH` 作为本地 bundled source；未设置、空串或仅空白时回退到
 `${ZCODE_HOME:-$HOME/.zcode}/computer-use/dev/ZCode Computer Use Dev.app`。路径缺失或校验失败时
 fail-closed，绝不回退下载。正式打包 desktop 会忽略该开发态覆盖并始终使用
-`ZCode.app/Contents/Resources/cua-helper/ZCode Computer Use.app`，因此 shell 不能改写生产来源。
+`LongsysCode.app/Contents/Resources/cua-helper/ZCode Computer Use.app`，因此 shell 不能改写生产来源。
 
 标准 `pnpm dev:desktop` 启动脚本必须同时注入当前 checkout 的 bundled Helper 路径和
 `ZCODE_CUA_HELPER_ALLOW_UNSIGNED_LOCAL=1`。两者缺一不可：只有路径时 Host 不会进入本地开发

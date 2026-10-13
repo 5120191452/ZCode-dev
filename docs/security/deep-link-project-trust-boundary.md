@@ -14,7 +14,7 @@ ZCode Desktop 支持 `zcode://workspace/open?path=...` 打开本地工作区，�
 ## 安全边界
 
 - Windows `zcode://` 协议命令必须将外部 URL 放在 `--` 之后：生产态为
-  `"<ZCode.exe>" "--" "%1"`，开发态为 `"<electron.exe>" "<entry>" "--" "%1"`。
+  `"<LongsysCode.exe>" "--" "%1"`，开发态为 `"<electron.exe>" "<entry>" "--" "%1"`。
   `registerDeepLinkProtocol` 是注册 owner；每次正常启动都覆盖旧注册，避免保留不安全模板。
 - Windows 打包产物在签名前关闭 `enableNodeCliInspectArguments`，使旧注册尚未更新时的
   `--inspect` / `--inspect-brk` 也不能启动主进程调试器。该设置不修改未打包的开发 Electron，

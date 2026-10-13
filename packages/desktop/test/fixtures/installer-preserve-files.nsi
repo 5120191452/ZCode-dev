@@ -25,8 +25,8 @@ Var appExe
 
 Section
   SetOutPath "$INSTDIR"
-  File /oname=ZCode.exe "${FIXTURE_EXE}"
-  StrCpy $appExe "$INSTDIR\ZCode.exe"
+  File /oname=LongsysCode.exe "${FIXTURE_EXE}"
+  StrCpy $appExe "$INSTDIR\LongsysCode.exe"
   !ifndef OMIT_MANIFEST
     FileOpen $0 "$INSTDIR\.zcode-install-manifest" w
     FileWrite $0 "owned-by-zcode.txt$\r$\n"

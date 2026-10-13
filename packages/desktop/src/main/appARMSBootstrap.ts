@@ -52,7 +52,7 @@ function hasProductExecutable(
   runtimeExecutableName?: string,
 ): boolean {
   // 修复原因：app name 不等于所有运行形态的真实二进制名；开发态使用 Electron，
-  // Linux Preview 使用 zcode-preview。两者都必须精确匹配，不能放宽成前缀以免混入 helper dump。
+  // Linux Preview 使用 longsyscode-preview。两者都必须精确匹配，不能放宽成前缀以免混入 helper dump。
   const expectedNames = new Set(
     [applicationName, runtimeExecutableName].map(normalizeExecutableName).filter(Boolean),
   );

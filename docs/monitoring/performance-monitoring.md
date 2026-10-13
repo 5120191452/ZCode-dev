@@ -113,7 +113,7 @@ ARMS `crashReporter` 会扫描共享 crash dump 目录。上报前先校验
 `chrome-headless-shell` 等外部程序 dump 直接丢弃。该过滤只遍历 crash 批次的已有
 元数据，不增加采样、文件或子进程开销。可信名称集合必须包含产品应用名和
 `basename(process.execPath)`，覆盖开发态 `Electron` 与 Linux Preview
-`zcode-preview`。
+`longsyscode-preview`。
 
 仅命中产品二进制不能证明 dump 来自主进程：Linux/Windows 的 Electron 子进程可能共用
 同一 executable。事件必须通过 `native_dump_process_role`（或兼容的 process-role 元数据）

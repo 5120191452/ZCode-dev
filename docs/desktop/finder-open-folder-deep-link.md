@@ -26,11 +26,11 @@
 
 ## Windows 数据流
 
-1. ZCode Desktop 在 Windows 启动时安装或更新当前用户的 Explorer 右键菜单注册表项。
-2. 注册表写入 `HKCU\Software\Classes\Directory\shell\ZCode.OpenInZCode`，菜单文案为 `Open in ZCode`，图标指向当前 ZCode 可执行文件。
-3. 注册表写入 `HKCU\Software\Classes\Directory\shell\ZCode.OpenInZCode\command`，命令为 `"<ZCode.exe>" --open-workspace "%1"`。
+1. LongsysCode Desktop 在 Windows 启动时安装或更新当前用户的 Explorer 右键菜单注册表项。
+2. 注册表继续写入兼容键 `HKCU\Software\Classes\Directory\shell\ZCode.OpenInZCode`，菜单文案为 `Open in LongsysCode`，图标指向当前 LongsysCode 可执行文件。
+3. 注册表写入 `HKCU\Software\Classes\Directory\shell\ZCode.OpenInZCode\command`，命令为 `"<LongsysCode.exe>" --open-workspace "%1"`。
 4. 同步写入 `HKCU\Software\Classes\Drive\shell\ZCode.OpenInZCode`，支持右键打开盘符根目录。
-5. Explorer 触发后启动第二个 ZCode 进程；Electron single-instance 通过 `additionalData` 或 argv 解析出 `openWorkspacePath`。
+5. Explorer 触发后启动第二个 LongsysCode 进程；Electron single-instance 通过 `additionalData` 或 argv 解析出 `openWorkspacePath`。
 6. main 进程复用本地目录校验与 `OpenWorkspacePath` IPC；冷启动时先缓存，等 renderer ready 后投递。
 7. renderer 复用 `handleSelectProject(path)`，保持已有 tab 去重、跨窗口激活、recentProjects 更新逻辑。
 

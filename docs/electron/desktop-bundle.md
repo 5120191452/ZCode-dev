@@ -67,6 +67,19 @@ pnpm bundle:desktop -- win arm64
 
 同时兼容常见别名：`macos`、`darwin`、`windows`、`amd64`、`aarch64`。
 
+## Windows 构建宿主
+
+Windows x64 安装包建议在 Windows x64 主机或 runner 上构建。在 Linux/macOS 上执行
+`--os win` 属于交叉构建，Electron Builder 修改 Windows 可执行文件时需要 Wine；Ubuntu 可先安装：
+
+```bash
+sudo apt install wine64
+```
+
+`bundle.mjs` 会在资源准备和应用编译前检查 `wine` / `wine64`，缺失时立即退出。`--dry-run`
+只打印命令，不要求安装 Wine。正式包还要显式设置 `ZCODE_ENV=production`，否则安全默认值会生成
+`LongsysCode Preview` 测试身份。
+
 ## CI / 脚本场景
 
 如果不方便传 CLI 参数，也可以使用环境变量：

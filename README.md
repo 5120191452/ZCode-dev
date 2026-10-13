@@ -159,7 +159,7 @@ pnpm bundle:desktop -- --help
 安装：双击打开产物 DMG，将 ZCode 拖入"应用程序"。本地构建未签名，首次打开若被 macOS 拦截，执行：
 
 ```bash
-sudo xattr -rd com.apple.quarantine /Applications/ZCode.app
+sudo xattr -rd com.apple.quarantine /Applications/LongsysCode.app
 ```
 
 ### LongsysCode 命令行版

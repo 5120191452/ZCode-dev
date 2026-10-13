@@ -27,10 +27,10 @@ GET /api/v1/releases/electron/manifest
 ```yaml
 version: 3.4.0
 files:
-  - url: https://cdn.example.com/zcode/electron/releases/3.4.0/macos-arm64/ZCode-3.4.0-mac-arm64.zip
+  - url: https://cdn.example.com/zcode/electron/releases/3.4.0/macos-arm64/LongsysCode-3.4.0-mac-arm64.zip
     sha512: ...
     size: 123456
-path: https://cdn.example.com/zcode/electron/releases/3.4.0/macos-arm64/ZCode-3.4.0-mac-arm64.zip
+path: https://cdn.example.com/zcode/electron/releases/3.4.0/macos-arm64/LongsysCode-3.4.0-mac-arm64.zip
 sha512: ...
 releaseDate: "2026-07-09T00:00:00.000Z"
 ```
