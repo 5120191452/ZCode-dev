@@ -291,6 +291,8 @@ describe("ReadSessionContext tool", () => {
 
     expect(references).toEqual(["sess_alpha-1", "sess_beta_2"]);
     const body = buildReferencedSessionContextReminderBody("continue #sess_alpha-1");
+    expect(body).toContain("prior LongsysCode session(s)");
+    expect(body).not.toContain("prior ZCode session(s)");
     expect(body).toContain("ReadSessionContext");
     expect(body).toContain("sess_alpha-1");
     expect(body).not.toContain("<system-reminder>");

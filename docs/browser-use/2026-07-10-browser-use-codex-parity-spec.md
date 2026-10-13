@@ -729,7 +729,7 @@ ZCode **不在**成功的导航/点击/输入等 side-effect cell 结束后自�
    - Current URL: ...
    </in-app-browser-context>
 
-   ## My request for ZCode:
+   ## My request for LongsysCode:
    <真实用户输入>
    ```
 

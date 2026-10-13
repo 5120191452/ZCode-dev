@@ -90,7 +90,7 @@ describe("会话区 subagent prompt assembly E2E", () => {
 
     await runSubagentPromptAssemblyScenario({
       agentPromptIncludes: [
-        "You are an agent for ZCode CLI",
+        "You are an agent for LongsysCode CLI",
         "the caller will relay this to the user",
       ],
       agentPromptExcludes: [CUSTOM_AGENT_PROMPT_MARKER],
@@ -106,7 +106,7 @@ describe("会话区 subagent prompt assembly E2E", () => {
     // 混入无关的压缩 fixture；保持同一窗口，但用新任务隔离每类 child trajectory。
     await startNewV4Draft();
     await runSubagentPromptAssemblyScenario({
-      agentPromptIncludes: ["You are ZCode Explore", "READ-ONLY MODE"],
+      agentPromptIncludes: ["You are LongsysCode Explore", "READ-ONLY MODE"],
       agentPromptExcludes: [CUSTOM_AGENT_PROMPT_MARKER],
       childMarker: EXPLORE_CHILD_MARKER,
       childReplyToken: EXPLORE_CHILD_REPLY_TOKEN,
@@ -123,7 +123,7 @@ describe("会话区 subagent prompt assembly E2E", () => {
         CUSTOM_AGENT_PROMPT_MARKER,
         "Reply only with the requested marker.",
       ],
-      agentPromptExcludes: ["You are an agent for ZCode CLI"],
+      agentPromptExcludes: ["You are an agent for LongsysCode CLI"],
       childMarker: CUSTOM_CHILD_MARKER,
       childReplyToken: CUSTOM_CHILD_REPLY_TOKEN,
       finalToken: CUSTOM_FINAL_TOKEN,
@@ -139,7 +139,7 @@ describe("会话区 subagent prompt assembly E2E", () => {
         ISOLATED_CUSTOM_AGENT_PROMPT_MARKER,
         "Reply only with the requested marker.",
       ],
-      agentPromptExcludes: ["You are an agent for ZCode CLI"],
+      agentPromptExcludes: ["You are an agent for LongsysCode CLI"],
       childMarker: ISOLATED_CUSTOM_CHILD_MARKER,
       childReplyToken: ISOLATED_CUSTOM_CHILD_REPLY_TOKEN,
       finalToken: ISOLATED_CUSTOM_FINAL_TOKEN,
@@ -158,7 +158,7 @@ describe("会话区 subagent prompt assembly E2E", () => {
     await runSubagentPromptAssemblyScenario({
       modelId,
       agentPromptIncludes: [
-        "You are an agent for ZCode CLI",
+        "You are an agent for LongsysCode CLI",
         "the caller will relay this to the user",
       ],
       agentPromptExcludes: [CUSTOM_AGENT_PROMPT_MARKER],
@@ -336,7 +336,7 @@ function assertChildSystemPromptShape(
     { type: "ephemeral" },
     { type: "ephemeral" },
   ]);
-  expect(systems[0]).toBe("You are ZCode, an interactive coding agent");
+  expect(systems[0]).toBe("You are LongsysCode, an interactive coding agent");
   for (const expected of input.agentPromptIncludes) {
     expect(systems[1]).toContain(expected);
   }

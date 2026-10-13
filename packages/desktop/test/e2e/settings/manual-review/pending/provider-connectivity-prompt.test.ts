@@ -122,7 +122,7 @@ describe("C91-04 connectivity whitelist prompt", () => {
         expect(body.stream).toBe(true);
         expect(body.max_completion_tokens).toBe(1);
         expect(body.messages).toEqual([
-          { role: "system", content: "You are ZCode connectivity probe." },
+          { role: "system", content: "You are LongsysCode connectivity probe." },
           { role: "user", content: "hi" },
         ]);
         expect(body.tools).toBeUndefined();

@@ -1,4 +1,4 @@
-# ZCode Desktop Context
+# LongsysCode Desktop Context
 
 ## 状态
 
@@ -32,7 +32,7 @@ cacheHint: stable
 正文固定为：
 
 ```text
-# ZCode Desktop Context
+# LongsysCode Desktop Context
 
 ### Files & URLs
 - Return local web URLs as Markdown links (e.g., [label](http://127.0.0.1:8080)).

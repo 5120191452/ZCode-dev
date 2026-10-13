@@ -184,7 +184,7 @@
         "method": "POST",
         "pathIncludes": "/messages",
         "lastUserMessageIncludes": ["E2E_SUBAGENT_PROMPT_ASSEMBLY_EXPLORE_CHILD"],
-        "bodyIncludes": ["E2E_SUBAGENT_PROMPT_ASSEMBLY_EXPLORE_CHILD", "You are ZCode Explore"],
+        "bodyIncludes": ["E2E_SUBAGENT_PROMPT_ASSEMBLY_EXPLORE_CHILD", "You are LongsysCode Explore"],
         "bodyExcludes": [
           "E2E_SUBAGENT_USER_AGENTS_INSTRUCTION",
           "E2E_SUBAGENT_WORKSPACE_AGENTS_INSTRUCTION",

@@ -1,13 +1,14 @@
 # System Prompt Contract
 
-ZCode stable system prompt is the long-lived behavioral contract for the main
+The LongsysCode stable system prompt is the long-lived behavioral contract for the main
 coding agent. It should be provider-visible, cache-friendly, and specific enough
 to make repository work evidence-first without mirroring runtime tool schemas.
 
 ## Goals
 
-- Fix the agent identity to `zcode-agent`; callers must not compose identity
-  text through runtime agent metadata.
+- Present the product identity as `LongsysCode` while keeping the internal
+  runtime identity fixed to `zcode-agent`; callers must not compose
+  provider-visible identity text through runtime agent metadata.
 - Make "read before deciding" the default behavior for repository tasks.
 - Define clear safety, validation, communication, and scope boundaries with
   concrete examples.
@@ -21,11 +22,11 @@ to make repository work evidence-first without mirroring runtime tool schemas.
 
 | Section              | Purpose                                                                                                                            |
 | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| Static Default Body  | ZCode role, authorized-security boundary, and compact harness guidance.                                                            |
+| Static Default Body  | LongsysCode role, authorized-security boundary, and compact harness guidance.                                                       |
 | Dynamic Default Body | Coding/risk behavior guidance, session guidance, memory, environment, optional output style, context management, and git snapshot. |
 
 The provider-visible `system[0]` CLI prefix is exactly
-`You are ZCode, an interactive coding agent`. The provider-visible static
+`You are LongsysCode, an interactive coding agent`. The provider-visible static
 default body is a compact `system[1]` block after that short CLI prefix. It
 intentionally does not render `# Agent Identity` or separate `Task Behavior`,
 `Risky Actions`, or `Communication Style` headings. The legacy `task_behavior`,
@@ -33,7 +34,7 @@ intentionally does not render `# Agent Identity` or separate `Task Behavior`,
 active context contract. The final provider body must follow this
 static/global-cache boundary:
 
-1. Short ZCode software-engineering-agent intro with no heading.
+1. Short LongsysCode software-engineering-agent intro with no heading.
 2. Authorized security boundary.
 3. `# Harness` section for terminal markdown, permission denial handling,
    system-controlled mid-conversation updates and hook feedback, dedicated tool
@@ -48,7 +49,7 @@ risk/reporting paragraphs must not be emitted in `system[1]`.
 
 An active output style changes the static intro but does not remove `# Harness`,
 including when `keepCodingInstructions` is false. That field applies only to a
-separate doing-tasks coding-instructions block; ZCode does not currently emit
+separate doing-tasks coding-instructions block; LongsysCode does not currently emit
 such a block.
 
 The provider-visible dynamic default body is `system[2]`. It always owns a
@@ -121,7 +122,7 @@ provider-visible note is exactly:
 
 The stable prompt must include guidance equivalent to:
 
-- The agent is a ZCode interactive coding agent for software-engineering work.
+- The agent is a LongsysCode interactive coding agent for software-engineering work.
 - The agent works in the current workspace and can inspect, edit, and validate
   code using the available tools.
 - User-facing text outside tool calls renders as GitHub-flavored Markdown in a
@@ -182,8 +183,9 @@ Disallowed examples:
 
 ## Identity Compatibility
 
-`agentName` may remain runtime metadata for hooks, persistence, subsessions, and
-debug records. It must not affect the stable main-agent system prompt.
+`agentName` may remain `zcode-agent` runtime metadata for hooks, persistence,
+subsessions, and debug records. It must not affect the LongsysCode brand in the
+stable main-agent system prompt.
 `agentBasePrompt` is not part of the context-builder contract and should not be
 accepted as a prompt composition input. Workflow and subagent specialisation
 should be expressed through their own explicit prompt sections or runtime
@@ -218,13 +220,14 @@ Required Explore prompt behavior:
   command; `Bash` is restricted to read-only operations.
 - Encourages parallel tool calls and absolute paths (cwd may reset between
   `Bash` calls).
-- ZCode-specific, kept on purpose: says exactly what is missing when evidence is
+- LongsysCode-specific, kept on purpose: says exactly what is missing when evidence is
   incomplete, and explicitly forbids spawning another agent.
 
 ## Test Coverage
 
-- ContextBuilder renders a fixed `zcode-agent` identity even when runtime config
-  contains custom agent metadata.
+- ContextBuilder renders a fixed LongsysCode provider-visible identity even when
+  runtime config contains custom agent metadata; runtime metadata remains
+  `zcode-agent`.
 - Stable system prompt contains evidence-first and no-guessing guidance.
 - Stable system prompt contains safety boundaries with destructive-action
   examples.
@@ -233,7 +236,7 @@ Required Explore prompt behavior:
   policy and the no-URL-fabrication rule.
 - Stable system prompt tells the agent not to retry a denied tool call
   unchanged.
-- Provider-visible static `system[1]` starts with the ZCode intro, uses compact
+- Provider-visible static `system[1]` starts with the LongsysCode intro, uses compact
   `# Harness`, and does not render `# Agent Identity` or the old `# Task Behavior`,
   `# Risky Actions`, or `# Communication Style` headings; it ends at the final
   `# Harness` bullet.

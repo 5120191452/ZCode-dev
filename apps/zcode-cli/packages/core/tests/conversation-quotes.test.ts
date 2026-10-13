@@ -44,7 +44,8 @@ describe("structured conversation quotes", () => {
       chatId: "chat",
       provider: "feishu",
     });
-    expect(result).toContain("automatically delivers");
+    expect(result).toContain("LongsysCode automatically delivers");
+    expect(result).not.toContain("ZCode automatically delivers");
     expect(result).toContain("timezone");
     expect(result).toContain("explicitly requests an additional");
     expect(result).not.toContain("bot_topic_context");

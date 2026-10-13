@@ -17,12 +17,30 @@
   `app.login` 与 `sidebar.profile.notLoggedIn` 必须保持一致，并继续复用原有认证行为。
 - About、帮助菜单、托盘、打开目录菜单、更新提示、Computer Use、会话分享、Web Remote Control、
   内置插件说明及“LongsysCode 使用指南”等用户可见文案统一使用 `LongsysCode`。
+- 发送给模型的产品身份文案统一使用 `LongsysCode`，包括主 Agent、内置 Subagent、Workflow、
+  Desktop 上下文、会话提示和模型连通性探测。模型不得再从当前提示词中获得旧产品名 `ZCode`，
+  但运行时 metadata 中的 `zcode-agent` 身份继续保持不变。
 - Desktop 安装包和主应用进程的可见名称按
   [`desktop-product-identity.md`](./desktop-product-identity.md) 迁移为 `LongsysCode`；`ZCode*`
   TypeScript/Kotlin 符号、`@zcode/*` 包名、`.zcode` 数据目录、`zcode://` 协议、`X-ZCode-*`
   HTTP 头、配置键、遥测字段、注册表键及兼容性错误匹配保持不变。
 - Electron 的 appId、数据目录选择和旧版迁移标记保持兼容；产品名替换不得创建新的用户数据目录，
   也不得重写已持久化 Provider、模型或会话数据。
+
+### Provider 可见提示词 Impact Brief
+
+| Field              | Value                                                                                 |
+| ------------------ | ------------------------------------------------------------------------------------- |
+| Requested change   | 模型回复中的自我身份从 `ZCode` 改为 `LongsysCode`                                     |
+| Change layers      | Provider 可见提示词、Subagent/Workflow 提示词、辅助模型请求、契约测试                 |
+| Primary capability | `capability.product-brand-logo`                                                       |
+| Direct owner       | CLI core 的 context section、Subagent prompt、Workflow prompt 与辅助请求构造器        |
+| Downstream         | 主会话、内置 Subagent、Desktop 上下文、会话提醒、连通性探测及各 Provider adapter 投影 |
+| Out of scope       | `zcode-agent` metadata、包名、协议、存储、遥测、HTTP 兼容标识和 Provider 自身品牌     |
+
+主 Agent 和子 Agent 仍沿用现有 ContextBuilder/Runtime 写入路径，adapter 只投影消息而不改写品牌。
+本次不新增状态、提交路径、队列或恢复语义；功能图新增产品品牌到 Agent core runtime 的必查关系，
+单测和 adapter wire test 冻结最终 Provider 消息，Desktop E2E fixture 同步更新但无需新增交互分支。
 
 ## 资产所有者与派生关系
 
@@ -67,14 +85,15 @@ public/logo/brand-logo.png
 
 ## 影响摘要
 
-| 产品节点           | 受影响界面/边界                           | 检查理由                   |
-| ------------------ | ----------------------------------------- | -------------------------- |
-| 产品品牌资产       | Desktop 打包、Web 入口、Renderer 品牌组件 | 共享同一母版和派生规则     |
-| Desktop 平台外壳   | Dock/任务栏/托盘/DMG/NSIS/About           | 消费 PNG、ICO 或 ICNS 投影 |
-| Android 平台外壳   | Launcher / round / adaptive icon          | 消费密度分级 PNG 投影      |
-| Web Remote Control | HTML data URL + `favicon.ico`             | 非根 base 下仍须直接可用   |
-| Renderer 共享 UI   | 登录、引导、空态、更新、Highspeed         | 不得保留旧内联 Z SVG       |
-| Provider 品牌      | Z.AI Provider Logo                        | 是隔离边界，必须保持不变   |
+| 产品节点           | 受影响界面/边界                            | 检查理由                   |
+| ------------------ | ------------------------------------------ | -------------------------- |
+| 产品品牌资产       | Desktop 打包、Web 入口、Renderer 品牌组件  | 共享同一母版和派生规则     |
+| Desktop 平台外壳   | Dock/任务栏/托盘/DMG/NSIS/About            | 消费 PNG、ICO 或 ICNS 投影 |
+| Android 平台外壳   | Launcher / round / adaptive icon           | 消费密度分级 PNG 投影      |
+| Web Remote Control | HTML data URL + `favicon.ico`              | 非根 base 下仍须直接可用   |
+| Renderer 共享 UI   | 登录、引导、空态、更新、Highspeed          | 不得保留旧内联 Z SVG       |
+| Agent 模型上下文   | 主 Agent、Subagent、Workflow、辅助模型请求 | Provider 可见品牌必须一致  |
+| Provider 品牌      | Z.AI Provider Logo                         | 是隔离边界，必须保持不变   |
 
 品牌资产本身是静态展示投影；Desktop 安装/进程名称的后续迁移单独遵守安装身份规范，不改变
 Renderer 状态、Host/Agent 生命周期、任务流、workspace identity、远控传输或任何持久化数据。
@@ -92,4 +111,6 @@ Renderer 状态、Host/Agent 生命周期、任务流、workspace identity、远
 5. 未认证入口显示“重新认证模型”，点击后仍进入原模型认证流程；帮助菜单和 About 显示“关于 LongsysCode”，
    内置指南显示“LongsysCode 使用指南”。
 6. 用户可见目录中不再出现独立的旧品牌名 `ZCode`，但兼容性技术标识保持原值。
-7. Web 定向测试、UI/Desktop 定向测试、`pnpm typecheck`、`pnpm lint` 和 `pnpm architecture:check --changed` 通过。
+7. 主 Agent 和内置 Subagent 的 Provider 请求使用 `LongsysCode` 身份；Workflow、Desktop 上下文、
+   会话提示和连通性探测也不再向模型注入旧产品名。`zcode-agent` metadata、协议与持久化标识不变。
+8. Web 定向测试、UI/Desktop 定向测试、`pnpm typecheck`、`pnpm lint` 和 `pnpm architecture:check --changed` 通过。
