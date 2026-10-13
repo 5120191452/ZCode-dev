@@ -13,5 +13,13 @@ fi
 # 不清理会让单测里的临时仓库 Git 命令误命中当前仓库（例如把功能分支改名为 main）。
 # shellcheck disable=SC2046
 unset $(git rev-parse --local-env-vars)
-# 修复原因：强制 mise 会阻止已用其他方式准备好 Node/pnpm 的开发者推送；沿用当前环境。
-ZCODE_PRE_PUSH_STDIN="$pre_push_stdin" pnpm run verify:pre-push
+# 修复原因：Git GUI 和非登录 shell 可能未加载 mise shims，导致仓库已安装运行时却找不到 pnpm。
+# 已有 pnpm 时沿用当前环境；只有 pnpm 缺失时才通过 mise 回退，避免强制所有开发者安装 mise。
+if command -v pnpm >/dev/null 2>&1; then
+  ZCODE_PRE_PUSH_STDIN="$pre_push_stdin" pnpm run verify:pre-push
+elif command -v mise >/dev/null 2>&1; then
+  ZCODE_PRE_PUSH_STDIN="$pre_push_stdin" mise exec -- pnpm run verify:pre-push
+else
+  echo "pre-push: pnpm or mise is required; make one of them available to Git hooks." >&2
+  exit 127
+fi

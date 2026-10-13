@@ -12,23 +12,27 @@
 
 ## 开发环境与版本管理工具
 
-pre-push 直接使用当前 `PATH` 中的 pnpm / Node，不强制依赖 mise。此前 hook 外层的
-`mise exec` 虽能选择指定版本，却使已用 nvm 等方式准备好环境的开发者也必须安装 mise，
-否则检查尚未开始就会失败。
+pre-push 优先使用当前 `PATH` 中的 pnpm / Node，不强制依赖 mise。若 Git Hook 的非登录
+shell 找不到 `pnpm`、但能找到 `mise`，则回退到 `mise exec -- pnpm`，让 GUI Git 客户端和
+未加载 shell profile 的 Hook 仍能使用仓库声明的运行时。此前无条件套用 `mise exec` 会使
+已用 nvm 等方式准备好环境的开发者也必须安装 mise，因此回退只在 `pnpm` 缺失时启用。
 
 ```text
 开发者准备 Node / pnpm（mise、nvm 或其他方式）
     → Git hook 保留 push ref 信息并清理 Git local env
-    → pnpm run verify:pre-push
+    → PATH 有 pnpm ─────────→ pnpm run verify:pre-push
+      PATH 无 pnpm、有 mise → mise exec -- pnpm run verify:pre-push
+      两者都没有 ───────────→ 输出明确诊断并阻止 push
     → lint / 架构检查 / 受影响单测
 ```
 
-- 仓库负责声明工具版本和执行检查；个人环境负责让合适的 Node / pnpm 可被 Git 找到。
-- mise 仍是可选的开发入口；`mise.toml`、`mise-run.mjs` 和现有子进程 PATH 保护保持不变。
+- 仓库负责声明工具版本和执行检查；个人环境至少要让 pnpm 或 mise 之一可被 Git 找到。
+- mise 仍是可选的开发入口；已有可用 pnpm 时不会经过 mise。`mise.toml`、`mise-run.mjs`
+  和现有子进程 PATH 保护保持不变。
 - GUI Git 客户端若找不到 Node / pnpm，可在个人 `~/.config/husky/init.sh` 中初始化自己的
   版本管理环境，参见 [Husky 官方说明](https://typicode.github.io/husky/how-to.html#node-version-managers-and-guis)。
-- 缺少命令或检查失败仍然阻止 push；hook 不自动安装工具，不静默跳过检查。
-- 本次只解除 hook 对 mise 的依赖，不新增版本检查，也不修改现有开发、CLI/SEA 或 CI 的版本要求。
+- pnpm 与 mise 都缺失或检查失败时仍然阻止 push；hook 不自动安装工具，不静默跳过检查。
+- 该回退不新增版本检查，也不修改现有开发、CLI/SEA 或 CI 的版本要求。
 
 ## Affected Unit Tests
 

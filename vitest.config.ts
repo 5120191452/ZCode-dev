@@ -98,6 +98,7 @@ export default defineConfig({
             "packages/services/src/gen-ui/**/*.test.ts",
             "scripts/assert-safe-cua-helper-zip.test.mjs",
             "scripts/ci/ci-telemetry-keyword-guard.test.mjs",
+            "scripts/pre-push-hook.test.mjs",
           ],
           exclude: ["packages/desktop/test/e2e/**", ...forkIsolatedTests],
           // Node 24/macOS 的 threads 全量运行可触发 V8 SIGSEGV；诊断时切换进程隔离，测试范围不变。
